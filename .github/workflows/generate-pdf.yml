@@ -55,17 +55,6 @@ jobs:
           pandoc PRIMEIRA_ENTREGA.md \
             -o PRIMEIRA_ENTREGA.pdf \
             --pdf-engine=xelatex \
-            -V mainfont="DejaVu Sans" \
-            -V monofont="DejaVu Sans Mono" \
-            -V geometry:margin=1in \
-            -V fontsize=11pt \
-            -V documentclass=article \
-            -V colorlinks=true \
-            -V linkcolor=blue \
-            -V urlcolor=blue \
-            -V toccolor=black \
-            --toc \
-            --toc-depth=3 \
             --number-sections \
             --highlight-style=tango
 

@@ -21,21 +21,32 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Pandoc and dependencies
+      - name: Detect documentation changes
+        id: detect_changes
         run: |
-          sudo apt-get update
-          sudo apt-get install -y pandoc texlive-latex-base texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra texlive-xetex fonts-dejavu
+          if git rev-parse HEAD^ >/dev/null 2>&1; then
+            if git diff --quiet HEAD^ HEAD -- PRIMEIRA_ENTREGA.md 'uml/**/*.mmd'; then
+              echo "pdf_needed=false" >> "$GITHUB_OUTPUT"
+            else
+              echo "pdf_needed=true" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "pdf_needed=true" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Setup Node.js
+      - name: Install Node.js runtime
+        if: steps.detect_changes.outputs.pdf_needed == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: 20.11.1
 
       - name: Install Mermaid CLI
+        if: steps.detect_changes.outputs.pdf_needed == 'true'
         run: |
           npm install -g @mermaid-js/mermaid-cli
 
       - name: Generate diagrams from Mermaid
+        if: steps.detect_changes.outputs.pdf_needed == 'true'
         run: |
           # Create output directories
           mkdir -p uml/svg uml/png
@@ -51,14 +62,30 @@ jobs:
           done
 
       - name: Convert Markdown to PDF
+        if: steps.detect_changes.outputs.pdf_needed == 'true'
         run: |
-          pandoc PRIMEIRA_ENTREGA.md \
-            -o PRIMEIRA_ENTREGA.pdf \
-            --pdf-engine=xelatex \
-            --number-sections \
-            --highlight-style=tango
+          docker run --rm \
+            -v "$PWD":/data \
+            -w /data \
+            ghcr.io/pandoc/latex:latest \
+            pandoc PRIMEIRA_ENTREGA.md \
+              -o PRIMEIRA_ENTREGA.pdf \
+              --pdf-engine=xelatex \
+              --number-sections \
+              --syntax-highlighting=tango
+
+      - name: Upload generated diagrams
+        if: steps.detect_changes.outputs.pdf_needed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: uml-diagrams
+          path: |
+            uml/png
+            uml/svg
+          retention-days: 30
 
       - name: Upload PDF as artifact
+        if: steps.detect_changes.outputs.pdf_needed == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: primeira-entrega-pdf
@@ -66,6 +93,7 @@ jobs:
           retention-days: 90
 
       - name: Commit PDF to repository
+        if: steps.detect_changes.outputs.pdf_needed == 'true'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
@@ -73,6 +101,7 @@ jobs:
           git diff --quiet && git diff --staged --quiet || git commit -m "docs: update generated PDF and diagrams [skip ci]"
 
       - name: Push changes
+        if: steps.detect_changes.outputs.pdf_needed == 'true'
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,101 @@
+classDiagram
+    class Usuario {
+        -Long id
+        -String nome
+        -String email
+        -String senha
+        -String telefone
+        -TipoUsuario tipo
+        -LocalDateTime dataCriacao
+        +autenticar(email, senha) Boolean
+        +alterarSenha(novaSenha) void
+        +validar() Boolean
+    }
+
+    class Espaco {
+        -Long id
+        -String nome
+        -String descricao
+        -Integer capacidade
+        -BigDecimal precoDiaria
+        -String endereco
+        -String cidade
+        -String estado
+        -List~String~ fotos
+        -Boolean ativo
+        -LocalDateTime dataCriacao
+        +calcularValorTotal(dias) BigDecimal
+        +verificarDisponibilidade(dataInicio, dataFim) Boolean
+        +ativar() void
+        +desativar() void
+        +validar() Boolean
+    }
+
+    class Reserva {
+        -Long id
+        -LocalDate dataInicio
+        -LocalDate dataFim
+        -BigDecimal valorTotal
+        -StatusReserva status
+        -LocalDateTime dataCriacao
+        -LocalDateTime dataAtualizacao
+        -Usuario cliente
+        -Espaco espaco
+        -List~Pagamento~ pagamentos
+        +calcularValorTotal() BigDecimal
+        +confirmar() void
+        +cancelar() void
+        +verificarPagamentoCompleto() Boolean
+        +validar() Boolean
+    }
+
+    class Pagamento {
+        -Long id
+        -BigDecimal valor
+        -LocalDateTime dataPagamento
+        -TipoPagamento tipo
+        -StatusPagamento status
+        -String comprovante
+        -Reserva reserva
+        +processar() void
+        +estornar() void
+        +validar() Boolean
+    }
+
+    class TipoUsuario {
+        <<enumeration>>
+        ADMINISTRADOR
+        ATENDENTE
+        CLIENTE
+    }
+
+    class StatusReserva {
+        <<enumeration>>
+        PENDENTE
+        CONFIRMADA
+        CANCELADA
+        CONCLUIDA
+    }
+
+    class TipoPagamento {
+        <<enumeration>>
+        SINAL
+        QUITACAO
+        COMPLETO
+    }
+
+    class StatusPagamento {
+        <<enumeration>>
+        PENDENTE
+        PROCESSADO
+        ESTORNADO
+    }
+
+    Usuario "1" --> "1" TipoUsuario : tem
+    Reserva "1" --> "1" Usuario : cliente
+    Reserva "1" --> "1" Espaco : aluga
+    Reserva "1" --> "1" StatusReserva : possui
+    Reserva "1" --> "*" Pagamento : contém
+    Pagamento "1" --> "1" TipoPagamento : tipo
+    Pagamento "1" --> "1" StatusPagamento : status
+    Pagamento "*" --> "1" Reserva : referente a

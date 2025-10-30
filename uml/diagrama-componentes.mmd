@@ -1,0 +1,73 @@
+graph TB
+    subgraph "Camada de Apresentação"
+        API[Controladores REST]
+        DTO[Objetos de Transferência]
+        VALID[Validadores]
+    end
+
+    subgraph "Camada de Aplicação"
+        US[Serviço de Usuários]
+        ES[Serviço de Espaços]
+        RS[Serviço de Reservas]
+        PS[Serviço de Pagamentos]
+    end
+
+    subgraph "Camada de Domínio"
+        UE[Entidade: Usuario]
+        EE[Entidade: Espaco]
+        RE[Entidade: Reserva]
+        PE[Entidade: Pagamento]
+        INTERFACES[Interfaces de Repositório]
+    end
+
+    subgraph "Camada de Persistência"
+        UR[Repositório de Usuários]
+        ER[Repositório de Espaços]
+        RR[Repositório de Reservas]
+        PR[Repositório de Pagamentos]
+    end
+
+    subgraph "Infraestrutura"
+        DB[(Banco de Dados Relacional)]
+    end
+
+    API --> DTO
+    DTO --> US
+    DTO --> ES
+    DTO --> RS
+    DTO --> PS
+    API --> VALID
+
+    US --> UE
+    ES --> EE
+    RS --> RE
+    PS --> PE
+
+    US --> UR
+    ES --> ER
+    RS --> RR
+    PS --> PR
+
+    UE -.implementa.-> INTERFACES
+    EE -.implementa.-> INTERFACES
+    RE -.implementa.-> INTERFACES
+    PE -.implementa.-> INTERFACES
+
+    UR --> DB
+    ER --> DB
+    RR --> DB
+    PR --> DB
+
+    style API fill:#E3F2FD
+    style US fill:#E8F5E9
+    style ES fill:#E8F5E9
+    style RS fill:#E8F5E9
+    style PS fill:#E8F5E9
+    style UE fill:#FFF3E0
+    style EE fill:#FFF3E0
+    style RE fill:#FFF3E0
+    style PE fill:#FFF3E0
+    style UR fill:#FCE4EC
+    style ER fill:#FCE4EC
+    style RR fill:#FCE4EC
+    style PR fill:#FCE4EC

@@ -1,0 +1,85 @@
+name: Generate PDF Documentation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'PRIMEIRA_ENTREGA.md'
+      - 'uml/**/*.mmd'
+      - '.github/workflows/generate-pdf.yml'
+  workflow_dispatch:
+
+jobs:
+  convert-to-pdf:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Pandoc and dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc texlive-latex-base texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Mermaid CLI
+        run: |
+          npm install -g @mermaid-js/mermaid-cli
+
+      - name: Generate diagrams from Mermaid
+        run: |
+          # Create output directories
+          mkdir -p uml/svg uml/png
+          
+          # Generate diagrams for all .mmd files in uml folder
+          for file in uml/*.mmd; do
+            if [ -f "$file" ]; then
+              filename=$(basename "$file" .mmd)
+              echo "Generating diagrams for $filename..."
+              mmdc -i "$file" -o "uml/png/${filename}.png" -b transparent
+              mmdc -i "$file" -o "uml/svg/${filename}.svg"
+            fi
+          done
+
+      - name: Convert Markdown to PDF
+        run: |
+          pandoc PRIMEIRA_ENTREGA.md \
+            -o PRIMEIRA_ENTREGA.pdf \
+            --pdf-engine=pdflatex \
+            -V geometry:margin=1in \
+            -V fontsize=11pt \
+            -V documentclass=article \
+            -V colorlinks=true \
+            -V linkcolor=blue \
+            -V urlcolor=blue \
+            -V toccolor=black \
+            --toc \
+            --toc-depth=3 \
+            --number-sections \
+            --highlight-style=tango
+
+      - name: Upload PDF as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: primeira-entrega-pdf
+          path: PRIMEIRA_ENTREGA.pdf
+          retention-days: 90
+
+      - name: Commit PDF to repository
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add PRIMEIRA_ENTREGA.pdf uml/png/*.png uml/svg/*.svg
+          git diff --quiet && git diff --staged --quiet || git commit -m "docs: update generated PDF and diagrams [skip ci]"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}

@@ -48,42 +48,7 @@ Com base na análise comparativa, a **Arquitetura em Camadas** é a escolha mais
 
 A arquitetura em camadas organiza o sistema em quatro camadas principais, cada uma com responsabilidades bem definidas:
 
-```
-┌─────────────────────────────────────────┐
-│      CAMADA DE APRESENTAÇÃO             │
-│   - Interface com o usuário             │
-│   - Controladores de API REST           │
-│   - Validação de entrada                │
-│   - Serialização/Deserialização         │
-└─────────────────────────────────────────┘
-              ↓ ↑
-┌─────────────────────────────────────────┐
-│      CAMADA DE APLICAÇÃO                │
-│   - Lógica de negócio                   │
-│   - Orquestração de operações           │
-│   - Gerenciamento de transações         │
-│   - Aplicação de regras de negócio      │
-└─────────────────────────────────────────┘
-              ↓ ↑
-┌─────────────────────────────────────────┐
-│      CAMADA DE DOMÍNIO                  │
-│   - Entidades de negócio                │
-│   - Objetos de valor                    │
-│   - Regras de domínio encapsuladas      │
-│   - Interfaces de contratos             │
-└─────────────────────────────────────────┘
-              ↓ ↑
-┌─────────────────────────────────────────┐
-│      CAMADA DE PERSISTÊNCIA             │
-│   - Acesso a dados                      │
-│   - Mapeamento objeto-relacional        │
-│   - Consultas e comandos ao BD          │
-└─────────────────────────────────────────┘
-              ↓ ↑
-┌─────────────────────────────────────────┐
-│         BANCO DE DADOS                  │
-└─────────────────────────────────────────┘
-```
+![Estrutura Proposta](uml/png/diagrama-estrutura-proposta.png)
 
 ### 3.2. Princípios da Arquitetura
 

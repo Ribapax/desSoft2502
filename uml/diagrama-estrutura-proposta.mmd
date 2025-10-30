@@ -1,0 +1,23 @@
+graph TD
+    A["Camada de Apresentação<br/>• Interface com o usuário<br/>• Controladores de API REST<br/>• Validação de entrada<br/>• Serialização/Deserialização"]
+    B["Camada de Aplicação<br/>• Lógica de negócio<br/>• Orquestração de operações<br/>• Gerenciamento de transações<br/>• Aplicação de regras de negócio"]
+    C["Camada de Domínio<br/>• Entidades de negócio<br/>• Objetos de valor<br/>• Regras de domínio encapsuladas<br/>• Interfaces de contratos"]
+    D["Camada de Persistência<br/>• Acesso a dados<br/>• Mapeamento objeto-relacional<br/>• Consultas e comandos ao BD"]
+    E["Banco de Dados"]
+
+    A <--> B
+    B <--> C
+    C <--> D
+    D <--> E
+
+    classDef camada fill:#E3F2FD,stroke:#1E88E5,stroke-width:1px,color:#0D47A1,font-weight:bold
+    classDef camadaInterna fill:#E8F5E9,stroke:#43A047,stroke-width:1px,color:#1B5E20,font-weight:bold
+    classDef camadaDominio fill:#FFF3E0,stroke:#FB8C00,stroke-width:1px,color:#E65100,font-weight:bold
+    classDef camadaPersistencia fill:#FCE4EC,stroke:#D81B60,stroke-width:1px,color:#880E4F,font-weight:bold
+    classDef banco fill:#F3E5F5,stroke:#8E24AA,stroke-width:1px,color:#4A148C,font-weight:bold
+
+    class A camada
+    class B camadaInterna
+    class C camadaDominio
+    class D camadaPersistencia
+    class E banco

@@ -67,12 +67,10 @@ jobs:
           docker run --rm \
             -v "$PWD":/data \
             -w /data \
+            --user "$(id -u)":"$(id -g)" \
+            --entrypoint sh \
             ghcr.io/pandoc/latex:latest \
-            pandoc PRIMEIRA_ENTREGA.md \
-              -o PRIMEIRA_ENTREGA.pdf \
-              --pdf-engine=xelatex \
-              --number-sections \
-              --syntax-highlighting=tango
+            -c "pandoc PRIMEIRA_ENTREGA.md -o PRIMEIRA_ENTREGA.pdf --pdf-engine=xelatex --number-sections --syntax-highlighting=tango"
 
       - name: Upload generated diagrams
         if: steps.detect_changes.outputs.pdf_needed == 'true'

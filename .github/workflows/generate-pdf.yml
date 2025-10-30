@@ -42,8 +42,8 @@ jobs:
             if [ -f "$file" ]; then
               filename=$(basename "$file" .mmd)
               echo "Generating diagrams for $filename..."
-              mmdc -i "$file" -o "uml/png/${filename}.png" -b transparent
-              mmdc -i "$file" -o "uml/svg/${filename}.svg"
+              mmdc -i "$file" -o "uml/png/${filename}.png" -b transparent -p puppeteer-config.json
+              mmdc -i "$file" -o "uml/svg/${filename}.svg" -p puppeteer-config.json
             fi
           done
 

@@ -1,6 +1,6 @@
 ---
 title: "Primeira Entrega - Sistema \"Seu Cantinho\""
-author: "Heric Camargo GRR20203959 Matheus Ribamar GRR20XXXXXX"
+author: "Heric Camargo GRR20203959 Mateus Ribamar GRR20190154"
 date: "30 de outubro de 2025"
 ---
 

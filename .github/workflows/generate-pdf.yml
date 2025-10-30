@@ -21,7 +21,7 @@ jobs:
       - name: Install Pandoc and dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y pandoc texlive-latex-base texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra
+          sudo apt-get install -y pandoc texlive-latex-base texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra texlive-xetex fonts-dejavu
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -51,7 +51,9 @@ jobs:
         run: |
           pandoc PRIMEIRA_ENTREGA.md \
             -o PRIMEIRA_ENTREGA.pdf \
-            --pdf-engine=pdflatex \
+            --pdf-engine=xelatex \
+            -V mainfont="DejaVu Sans" \
+            -V monofont="DejaVu Sans Mono" \
             -V geometry:margin=1in \
             -V fontsize=11pt \
             -V documentclass=article \

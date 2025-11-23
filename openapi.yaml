@@ -1,0 +1,552 @@
+openapi: 3.0.3
+info:
+  title: API Seu Cantinho
+  version: 1.0.0
+  description: |
+    Camada de apresentação REST do sistema "Seu Cantinho". A API cobre os recursos
+    de usuários, espaços, reservas e pagamentos, adotando validações contra
+    double-booking e documentação em português.
+servers:
+  - url: http://localhost:3333
+    description: Ambiente local de desenvolvimento
+paths:
+  /api/health:
+    get:
+      summary: Verifica a saúde da API
+      tags: [Infra]
+      responses:
+        '200':
+          description: Serviço operacional
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+  /api/users:
+    get:
+      summary: Lista usuários
+      tags: [Usuários]
+      responses:
+        '200':
+          description: Lista retornada com sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    post:
+      summary: Cadastra usuário
+      tags: [Usuários]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserPayload'
+      responses:
+        '201':
+          description: Usuário criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/users/{id}:
+    get:
+      summary: Consulta usuário
+      tags: [Usuários]
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Usuário encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Atualiza usuário
+      tags: [Usuários]
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserPayload'
+      responses:
+        '200':
+          description: Usuário atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Remove usuário
+      tags: [Usuários]
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '204':
+          description: Usuário removido
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/spaces:
+    get:
+      summary: Lista espaços
+      tags: [Espaços]
+      responses:
+        '200':
+          description: Lista de espaços
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Space'
+    post:
+      summary: Cadastra espaço
+      tags: [Espaços]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSpacePayload'
+      responses:
+        '201':
+          description: Espaço criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Space'
+  /api/spaces/{id}:
+    get:
+      summary: Consulta espaço
+      tags: [Espaços]
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Espaço encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Space'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Atualiza espaço
+      tags: [Espaços]
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSpacePayload'
+      responses:
+        '200':
+          description: Espaço atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Space'
+    delete:
+      summary: Remove espaço
+      tags: [Espaços]
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '204':
+          description: Espaço excluído
+  /api/reservations:
+    get:
+      summary: Lista reservas com filtros opcionais
+      tags: [Reservas]
+      parameters:
+        - in: query
+          name: userId
+          schema:
+            type: string
+        - in: query
+          name: spaceId
+          schema:
+            type: string
+        - in: query
+          name: status
+          schema:
+            $ref: '#/components/schemas/ReservationStatus'
+      responses:
+        '200':
+          description: Lista de reservas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Reservation'
+    post:
+      summary: Cadastra reserva garantindo ausência de double-booking
+      tags: [Reservas]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReservationPayload'
+      responses:
+        '201':
+          description: Reserva criada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+        '409':
+          description: Espaço indisponível
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/reservations/{id}:
+    get:
+      summary: Consulta reserva
+      tags: [Reservas]
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Reserva encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Atualiza reserva com validação de conflitos
+      tags: [Reservas]
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateReservationPayload'
+      responses:
+        '200':
+          description: Reserva atualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+    delete:
+      summary: Cancela reserva
+      tags: [Reservas]
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '204':
+          description: Reserva removida
+  /api/payments:
+    get:
+      summary: Lista pagamentos (filtrável por reserva)
+      tags: [Pagamentos]
+      parameters:
+        - in: query
+          name: reservationId
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de pagamentos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Payment'
+    post:
+      summary: Registra pagamento
+      tags: [Pagamentos]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaymentPayload'
+      responses:
+        '201':
+          description: Pagamento criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+  /api/payments/{id}:
+    get:
+      summary: Consulta pagamento
+      tags: [Pagamentos]
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Pagamento encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Atualiza pagamento
+      tags: [Pagamentos]
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePaymentPayload'
+      responses:
+        '200':
+          description: Pagamento atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+    delete:
+      summary: Remove pagamento
+      tags: [Pagamentos]
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '204':
+          description: Pagamento removido
+components:
+  parameters:
+    ResourceId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+  responses:
+    NotFound:
+      description: Recurso não localizado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: Conflito ou regra de negócio violada
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    CreateUserPayload:
+      type: object
+      required: [name, email]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+    UpdateUserPayload:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+    Space:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        capacity:
+          type: integer
+        pricePerHour:
+          type: number
+        coverImageUrl:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    CreateSpacePayload:
+      type: object
+      required: [name, description, capacity, pricePerHour]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        capacity:
+          type: integer
+        pricePerHour:
+          type: number
+        coverImageUrl:
+          type: string
+    UpdateSpacePayload:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        capacity:
+          type: integer
+        pricePerHour:
+          type: number
+        coverImageUrl:
+          type: string
+    ReservationStatus:
+      type: string
+      enum: [PENDING, CONFIRMED, CANCELLED]
+    Reservation:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        spaceId:
+          type: string
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        totalPrice:
+          type: number
+        status:
+          $ref: '#/components/schemas/ReservationStatus'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CreateReservationPayload:
+      type: object
+      required: [userId, spaceId, startDate, endDate, totalPrice]
+      properties:
+        userId:
+          type: string
+        spaceId:
+          type: string
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        totalPrice:
+          type: number
+        status:
+          $ref: '#/components/schemas/ReservationStatus'
+    UpdateReservationPayload:
+      type: object
+      properties:
+        userId:
+          type: string
+        spaceId:
+          type: string
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        totalPrice:
+          type: number
+        status:
+          $ref: '#/components/schemas/ReservationStatus'
+    PaymentStatus:
+      type: string
+      enum: [SIGNAL, FULL]
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+        reservationId:
+          type: string
+        amount:
+          type: number
+        status:
+          $ref: '#/components/schemas/PaymentStatus'
+        paidAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+    CreatePaymentPayload:
+      type: object
+      required: [reservationId, amount, status, paidAt]
+      properties:
+        reservationId:
+          type: string
+        amount:
+          type: number
+        status:
+          $ref: '#/components/schemas/PaymentStatus'
+        paidAt:
+          type: string
+          format: date-time
+    UpdatePaymentPayload:
+      type: object
+      properties:
+        amount:
+          type: number
+        status:
+          $ref: '#/components/schemas/PaymentStatus'
+        paidAt:
+          type: string
+          format: date-time
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        details:
+          type: object

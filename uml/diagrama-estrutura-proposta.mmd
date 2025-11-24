@@ -1,9 +1,15 @@
 graph TD
-    A["Camada de Apresentação<br/>• Interface com o usuário<br/>• Controladores de API REST<br/>• Validação de entrada<br/>• Serialização/Deserialização"]
-    B["Camada de Aplicação<br/>• Lógica de negócio<br/>• Orquestração de operações<br/>• Gerenciamento de transações<br/>• Aplicação de regras de negócio"]
-    C["Camada de Domínio<br/>• Entidades de negócio<br/>• Objetos de valor<br/>• Regras de domínio encapsuladas<br/>• Interfaces de contratos"]
-    D["Camada de Persistência<br/>• Acesso a dados<br/>• Mapeamento objeto-relacional<br/>• Consultas e comandos ao BD"]
-    E["Banco de Dados"]
+    A["Camada de Apresentação<br/>• Express Router e controladores<br/>• Validadores Zod p/ entradas<br/>• Middlewares (CORS, Helmet, erros)"]
+    B["Camada de Aplicação<br/>• Serviços orquestram regras
+• Checagens de conflito e consistência
+• Conversão entre DTOs e domínio"]
+    C["Camada de Domínio<br/>• Entidades (interfaces TS)
+• Enums de status e AppError
+• Contratos consumidos por serviços"]
+    D["Camada de Persistência<br/>• Repositórios better-sqlite3
+• Consultas parametrizadas
+• Gerenciamento de conexões"]
+    E["Banco de Dados (SQLite/arquivo)"]
 
     A <--> B
     B <--> C

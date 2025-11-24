@@ -1,101 +1,58 @@
 classDiagram
-    class Usuario {
-        -Long id
-        -String nome
-        -String email
-        -String senha
-        -String telefone
-        -TipoUsuario tipo
-        -LocalDateTime dataCriacao
-        +autenticar(email, senha) Boolean
-        +alterarSenha(novaSenha) void
-        +validar() Boolean
+    class User {
+        +id: string
+        +name: string
+        +email: string
+        +phone?: string
+        +createdAt: string
     }
 
-    class Espaco {
-        -Long id
-        -String nome
-        -String descricao
-        -Integer capacidade
-        -BigDecimal precoDiaria
-        -String endereco
-        -String cidade
-        -String estado
-        -List~String~ fotos
-        -Boolean ativo
-        -LocalDateTime dataCriacao
-        +calcularValorTotal(dias) BigDecimal
-        +verificarDisponibilidade(dataInicio, dataFim) Boolean
-        +ativar() void
-        +desativar() void
-        +validar() Boolean
+    class Space {
+        +id: string
+        +name: string
+        +description: string
+        +capacity: number
+        +pricePerHour: number
+        +coverImageUrl?: string
+        +createdAt: string
     }
 
-    class Reserva {
-        -Long id
-        -LocalDate dataInicio
-        -LocalDate dataFim
-        -BigDecimal valorTotal
-        -StatusReserva status
-        -LocalDateTime dataCriacao
-        -LocalDateTime dataAtualizacao
-        -Usuario cliente
-        -Espaco espaco
-        -List~Pagamento~ pagamentos
-        +calcularValorTotal() BigDecimal
-        +confirmar() void
-        +cancelar() void
-        +verificarPagamentoCompleto() Boolean
-        +validar() Boolean
+    class Reservation {
+        +id: string
+        +userId: string
+        +spaceId: string
+        +startDate: string
+        +endDate: string
+        +totalPrice: number
+        +status: ReservationStatus
+        +createdAt: string
+        +updatedAt: string
     }
 
-    class Pagamento {
-        -Long id
-        -BigDecimal valor
-        -LocalDateTime dataPagamento
-        -TipoPagamento tipo
-        -StatusPagamento status
-        -String comprovante
-        -Reserva reserva
-        +processar() void
-        +estornar() void
-        +validar() Boolean
+    class Payment {
+        +id: string
+        +reservationId: string
+        +amount: number
+        +status: PaymentStatus
+        +paidAt: string
+        +createdAt: string
     }
 
-    class TipoUsuario {
+    class ReservationStatus {
         <<enumeration>>
-        ADMINISTRADOR
-        ATENDENTE
-        CLIENTE
+        PENDING
+        CONFIRMED
+        CANCELLED
     }
 
-    class StatusReserva {
+    class PaymentStatus {
         <<enumeration>>
-        PENDENTE
-        CONFIRMADA
-        CANCELADA
-        CONCLUIDA
+        SIGNAL
+        FULL
     }
 
-    class TipoPagamento {
-        <<enumeration>>
-        SINAL
-        QUITACAO
-        COMPLETO
-    }
-
-    class StatusPagamento {
-        <<enumeration>>
-        PENDENTE
-        PROCESSADO
-        ESTORNADO
-    }
-
-    Usuario "1" --> "1" TipoUsuario : tem
-    Reserva "1" --> "1" Usuario : cliente
-    Reserva "1" --> "1" Espaco : aluga
-    Reserva "1" --> "1" StatusReserva : possui
-    Reserva "1" --> "*" Pagamento : contém
-    Pagamento "1" --> "1" TipoPagamento : tipo
-    Pagamento "1" --> "1" StatusPagamento : status
-    Pagamento "*" --> "1" Reserva : referente a
+    Reservation --> User : userId
+    Reservation --> Space : spaceId
+    Payment --> Reservation : reservationId
+    Reservation --> ReservationStatus
+    Payment --> PaymentStatus

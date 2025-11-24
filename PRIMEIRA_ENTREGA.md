@@ -43,16 +43,23 @@ Este documento apresenta a primeira entrega do sistema "Seu Cantinho" para geren
 
 **Princípios**: Separação de responsabilidades, dependência unidirecional (superior → inferior), alta coesão e baixo acoplamento, substituibilidade de camadas.
 
+Implementação correspondente:
+
+- `src/app`: Express Router, controladores REST, middlewares (CORS, Helmet, error handler) e validadores Zod.
+- `src/application`: Serviços especializados (`UserService`, `SpaceService`, `ReservationService`, `PaymentService`) que orquestram regras e verificações de disponibilidade.
+- `src/domain`: Entidades modeladas como interfaces TypeScript, enums de status e `AppError` para padronizar exceções.
+- `src/infra`: Repositórios `better-sqlite3` responsáveis por persistir dados no arquivo `data/database.sqlite`.
+
 ## 4. Diagramas UML
 
 ### 4.1. Diagrama de Classes
 
 ![Diagrama de Classes](uml/png/diagrama-classes.png)
 
-Entidades principais: **Usuario** (autenticação e perfis), **Espaco** (locais para eventos), **Reserva** (agendamentos e status), **Pagamento** (transações financeiras).
+Entidades principais: **User**, **Space**, **Reservation** e **Payment**, alinhadas diretamente com as interfaces utilizadas na API. As reservas referenciam `userId` e `spaceId`, os pagamentos se ligam a uma reserva via `reservationId`, e os estados possíveis são representados por `ReservationStatus` (`PENDING`, `CONFIRMED`, `CANCELLED`) e `PaymentStatus` (`SIGNAL`, `FULL`).
 
 ### 4.2. Diagrama de Componentes
 
 ![Diagrama de Componentes](uml/png/diagrama-componentes.png)
 
-Organização em 4 camadas: **Apresentação** (API REST, DTOs, validadores), **Aplicação** (serviços de negócio), **Domínio** (entidades e interfaces), **Persistência** (repositórios e banco de dados relacional).
+Organização em 4 camadas: **Apresentação** (Express Router, controladores e validadores Zod), **Aplicação** (serviços por agregado), **Domínio** (interfaces, enums e erros) e **Persistência** (repositórios sobre `better-sqlite3` que gravam em um único arquivo SQLite montado por volume Docker).

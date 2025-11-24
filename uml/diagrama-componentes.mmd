@@ -1,73 +1,70 @@
 graph TB
-    subgraph "Camada de Apresentação"
-        API[Controladores REST]
-        DTO[Objetos de Transferência]
-        VALID[Validadores]
+    subgraph "Apresentação (src/app)"
+        ROUTES[Express Router / routes]
+        CTRL[Controladores REST]
+        VALID[Validadores Zod]
+        MIDDLE[Middlewares (ex.: error handler)]
     end
 
-    subgraph "Camada de Aplicação"
-        US[Serviço de Usuários]
-        ES[Serviço de Espaços]
-        RS[Serviço de Reservas]
-        PS[Serviço de Pagamentos]
+    subgraph "Aplicação (src/application)"
+        US[UserService]
+        SS[SpaceService]
+        RS[ReservationService]
+        PS[PaymentService]
     end
 
-    subgraph "Camada de Domínio"
-        UE[Entidade: Usuario]
-        EE[Entidade: Espaco]
-        RE[Entidade: Reserva]
-        PE[Entidade: Pagamento]
-        INTERFACES[Interfaces de Repositório]
+    subgraph "Domínio (src/domain)"
+        ENT[Entidades (interfaces TS)]
+        ENUMS[Enums de status]
+        ERR[AppError]
     end
 
-    subgraph "Camada de Persistência"
-        UR[Repositório de Usuários]
-        ER[Repositório de Espaços]
-        RR[Repositório de Reservas]
-        PR[Repositório de Pagamentos]
+    subgraph "Persistência (src/infra)"
+        REPOS[Repositórios SQLite]
+        DBCONN[Conexão better-sqlite3]
     end
 
-    subgraph "Infraestrutura"
-        DB[(Banco de Dados Relacional)]
-    end
+    DATA[(data/database.sqlite)]
 
-    API --> DTO
-    DTO --> US
-    DTO --> ES
-    DTO --> RS
-    DTO --> PS
-    API --> VALID
+    ROUTES --> CTRL
+    CTRL --> VALID
+    CTRL --> MIDDLE
+    CTRL --> US
+    CTRL --> SS
+    CTRL --> RS
+    CTRL --> PS
 
-    US --> UE
-    ES --> EE
-    RS --> RE
-    PS --> PE
+    US --> ENT
+    SS --> ENT
+    RS --> ENT
+    PS --> ENT
 
-    US --> UR
-    ES --> ER
-    RS --> RR
-    PS --> PR
+    ENT --> ENUMS
+    ERR --> CTRL
+    ERR --> US
+    ERR --> SS
+    ERR --> RS
+    ERR --> PS
 
-    UE -.implementa.-> INTERFACES
-    EE -.implementa.-> INTERFACES
-    RE -.implementa.-> INTERFACES
-    PE -.implementa.-> INTERFACES
+    US --> REPOS
+    SS --> REPOS
+    RS --> REPOS
+    PS --> REPOS
 
-    UR --> DB
-    ER --> DB
-    RR --> DB
-    PR --> DB
+    REPOS --> DBCONN
+    DBCONN --> DATA
 
-    style API fill:#E3F2FD
+    style ROUTES fill:#E3F2FD
+    style CTRL fill:#E3F2FD
+    style VALID fill:#E3F2FD
+    style MIDDLE fill:#E3F2FD
     style US fill:#E8F5E9
-    style ES fill:#E8F5E9
+    style SS fill:#E8F5E9
     style RS fill:#E8F5E9
     style PS fill:#E8F5E9
-    style UE fill:#FFF3E0
-    style EE fill:#FFF3E0
-    style RE fill:#FFF3E0
-    style PE fill:#FFF3E0
-    style UR fill:#FCE4EC
-    style ER fill:#FCE4EC
-    style RR fill:#FCE4EC
-    style PR fill:#FCE4EC
+    style ENT fill:#FFF3E0
+    style ENUMS fill:#FFF3E0
+    style ERR fill:#FFF3E0
+    style REPOS fill:#FCE4EC
+    style DBCONN fill:#FCE4EC
+    style DATA fill:#F3E5F5

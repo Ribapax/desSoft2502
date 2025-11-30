@@ -1,16 +1,18 @@
 import { dbConnection } from './connection';
 
-export const resetDatabase = () => {
+export const resetDatabase = async () => {
   const statements = [
+    'DELETE FROM user_roles;',
+    'DELETE FROM roles;',
     'DELETE FROM payments;',
     'DELETE FROM reservations;',
     'DELETE FROM spaces;',
     'DELETE FROM users;'
   ];
 
-  dbConnection.exec('BEGIN;');
+  await dbConnection.query('BEGIN;');
   for (const statement of statements) {
-    dbConnection.exec(statement);
+    await dbConnection.query(statement);
   }
-  dbConnection.exec('COMMIT;');
+  await dbConnection.query('COMMIT;');
 };

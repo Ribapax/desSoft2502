@@ -1,78 +1,46 @@
-import Database from 'better-sqlite3';
-import fs from 'node:fs';
-import path from 'node:path';
+import { Pool, PoolClient, QueryResult, QueryResultRow } from 'pg';
 import { env } from '../../config/env';
+import { runMigrations } from './migrations';
+
+type QueryParams = any[] | undefined;
 
 class DatabaseConnection {
-  private static instance: Database.Database;
+  private static pool = new Pool({
+    host: env.database.host,
+    port: env.database.port,
+    database: env.database.name,
+    user: env.database.user,
+    password: env.database.password
+  });
+
+  private static initialized = false;
 
   private constructor() {
     // Prevent direct instantiation
   }
 
-  public static getInstance(): Database.Database {
-    if (!DatabaseConnection.instance) {
-      const databaseDir = path.dirname(env.databaseFile);
-      fs.mkdirSync(databaseDir, { recursive: true });
-
-      const connection = new Database(env.databaseFile);
-      connection.pragma('foreign_keys = ON');
-      connection.pragma('journal_mode = WAL');
-
-      DatabaseConnection.runMigrations(connection);
-      DatabaseConnection.instance = connection;
-    }
-
-    return DatabaseConnection.instance;
+  private static async migrate(client: PoolClient) {
+    await runMigrations(client);
   }
 
-  private static runMigrations(connection: Database.Database) {
-    const statements = `
-      CREATE TABLE IF NOT EXISTS users (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        email TEXT NOT NULL UNIQUE,
-        phone TEXT,
-        created_at TEXT NOT NULL DEFAULT (datetime('now'))
-      );
+  private static async ensureInitialized() {
+    if (this.initialized) return;
+    const client = await this.pool.connect();
+    try {
+      await this.migrate(client);
+      this.initialized = true;
+    } finally {
+      client.release();
+    }
+  }
 
-      CREATE TABLE IF NOT EXISTS spaces (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        description TEXT NOT NULL,
-        capacity INTEGER NOT NULL CHECK (capacity > 0),
-        price_per_hour REAL NOT NULL CHECK (price_per_hour >= 0),
-        cover_image_url TEXT,
-        created_at TEXT NOT NULL DEFAULT (datetime('now'))
-      );
-
-      CREATE TABLE IF NOT EXISTS reservations (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        space_id TEXT NOT NULL,
-        start_date TEXT NOT NULL,
-        end_date TEXT NOT NULL,
-        total_price REAL NOT NULL CHECK (total_price >= 0),
-        status TEXT NOT NULL CHECK (status IN ('PENDING', 'CONFIRMED', 'CANCELLED')),
-        created_at TEXT NOT NULL DEFAULT (datetime('now')),
-        updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY (space_id) REFERENCES spaces(id) ON DELETE CASCADE
-      );
-
-      CREATE TABLE IF NOT EXISTS payments (
-        id TEXT PRIMARY KEY,
-        reservation_id TEXT NOT NULL,
-        amount REAL NOT NULL CHECK (amount >= 0),
-        status TEXT NOT NULL CHECK (status IN ('SIGNAL', 'FULL')),
-        paid_at TEXT NOT NULL,
-        created_at TEXT NOT NULL DEFAULT (datetime('now')),
-        FOREIGN KEY (reservation_id) REFERENCES reservations(id) ON DELETE CASCADE
-      );
-    `;
-
-    connection.exec(statements);
+  public static async query<T extends QueryResultRow = QueryResultRow>(
+    text: string,
+    params?: QueryParams
+  ): Promise<QueryResult<T>> {
+    await this.ensureInitialized();
+    return this.pool.query<T>(text, params);
   }
 }
 
-export const dbConnection = DatabaseConnection.getInstance();
+export const dbConnection = DatabaseConnection;

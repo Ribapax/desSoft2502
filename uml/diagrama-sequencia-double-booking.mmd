@@ -1,0 +1,41 @@
+sequenceDiagram
+    autonumber
+    
+    participant C1 as Cliente A
+    participant C2 as Cliente B
+    participant API as API REST
+    participant RS as ReservationService
+    participant REPO as ReservationRepository
+    participant DB as PostgreSQL
+
+    Note over C1,DB: Cenário 1: Reserva bem-sucedida
+
+    C1->>API: POST /api/reservations
+    API->>RS: create(spaceId, startDate, endDate)
+    RS->>RS: ensureDateRange()
+    RS->>RS: ensureUserExists()
+    RS->>RS: ensureSpaceExists()
+    RS->>REPO: countOverlaps(spaceId, start, end)
+    REPO->>DB: SELECT COUNT(*) WHERE space_id = ? AND NOT (end <= start OR start >= end)
+    DB-->>REPO: count: 0
+    REPO-->>RS: 0 conflitos
+    RS->>REPO: create(reservation)
+    REPO->>DB: INSERT INTO reservations
+    DB-->>REPO: OK
+    REPO-->>RS: Reservation
+    RS-->>API: Reservation
+    API-->>C1: 201 Created
+
+    Note over C1,DB: Cenário 2: Double-booking bloqueado
+
+    C2->>API: POST /api/reservations (mesmo espaço/horário)
+    API->>RS: create(spaceId, startDate, endDate)
+    RS->>RS: ensureDateRange()
+    RS->>RS: ensureUserExists()
+    RS->>RS: ensureSpaceExists()
+    RS->>REPO: countOverlaps(spaceId, start, end)
+    REPO->>DB: SELECT COUNT(*) WHERE space_id = ? AND NOT (end <= start OR start >= end)
+    DB-->>REPO: count: 1
+    REPO-->>RS: 1 conflito!
+    RS--xAPI: AppError(409, "Espaço já reservado nesse período")
+    API--xC2: 409 Conflict

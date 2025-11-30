@@ -48,7 +48,7 @@ Implementação correspondente:
 - `src/app`: Express Router, controladores REST, middlewares (CORS, Helmet, error handler) e validadores Zod.
 - `src/application`: Serviços especializados (`UserService`, `SpaceService`, `ReservationService`, `PaymentService`) que orquestram regras e verificações de disponibilidade.
 - `src/domain`: Entidades modeladas como interfaces TypeScript, enums de status e `AppError` para padronizar exceções.
-- `src/infra`: Repositórios `better-sqlite3` responsáveis por persistir dados no arquivo `data/database.sqlite`.
+- `src/infra`: Repositórios responsáveis por persistir dados no banco de dados PostgreSQL.
 
 ## 4. Diagramas UML
 
@@ -62,4 +62,4 @@ Entidades principais: **User**, **Space**, **Reservation** e **Payment**, alinha
 
 ![Diagrama de Componentes](uml/png/diagrama-componentes.png)
 
-Organização em 4 camadas: **Apresentação** (Express Router, controladores e validadores Zod), **Aplicação** (serviços por agregado), **Domínio** (interfaces, enums e erros) e **Persistência** (repositórios sobre `better-sqlite3` que gravam em um único arquivo SQLite montado por volume Docker).
+Organização em 4 camadas: **Apresentação** (Express Router, controladores e validadores Zod), **Aplicação** (serviços por agregado), **Domínio** (interfaces, enums e erros) e **Persistência** (repositórios que gravam em um banco PostgreSQL montado por volume Docker).

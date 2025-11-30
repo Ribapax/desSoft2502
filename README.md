@@ -8,8 +8,8 @@ Docker Compose e documentação OpenAPI/Swagger.
 
 - **Camadas**: apresentação (Express controllers/rotas), aplicação (serviços e
   regras de negócio), domínio (entidades, enums e erros) e infraestrutura
-  (repositórios SQLite).
-- **Banco**: SQLite com `better-sqlite3`, habilitando `FOREIGN KEY` e bloqueio de
+  (repositórios PostgreSQL).
+- **Banco**: PostgreSQL, habilitando `FOREIGN KEY` e bloqueio de
   double-booking por meio de validação transacional na criação/edição de reservas.
 - **Validação**: Zod garante contratos de entrada e traduz erros para respostas
   HTTP 422.
@@ -21,7 +21,7 @@ src
 ├── application    # Serviços (regras de negócio)
 ├── config         # Configurações e variáveis de ambiente
 ├── domain         # Entidades, enums e erros reutilizáveis
-└── infra          # Banco SQLite e repositórios
+└── infra          # Banco PostgreSQL e repositórios
 ```
 
 ## Pré-requisitos
@@ -31,6 +31,15 @@ src
 - Docker 28.4+ e Docker Compose (para execução containerizada)
 
 ## Executando localmente
+
+Para executar localmente, você precisará de uma instância do PostgreSQL rodando.
+Recomendamos utilizar o Docker Compose para subir o banco de dados:
+
+```bash
+docker compose up -d db
+```
+
+Em seguida, instale as dependências e execute a aplicação:
 
 ```bash
 npm install
@@ -44,12 +53,17 @@ Scripts adicionais:
 - `npm start`: executa a versão compilada (exige `npm run build` prévio)
 - `npm run test`: executa a suíte Vitest com Supertest (fluxos principais)
 - `npm run test:watch`: modo interativo para desenvolvimento
-- `npm run seed`: popula dados base no SQLite local
+- `npm run seed`: popula dados base no banco
+- `npm run migrate`: executa as migrações do banco
 
 Variáveis úteis (`.env`):
 
 - `PORT` (default: 3333)
-- `DATABASE_FILE` (default: `data/database.sqlite`)
+- `DB_HOST` (default: `postgres` - para docker, use `localhost` para local)
+- `DB_PORT` (default: 5432)
+- `DB_NAME` (default: `seu_cantinho`)
+- `DB_USER` (default: `seucantinho`)
+- `DB_PASSWORD` (default: `seucantinho`)
 
 ## Executando com Docker Compose
 
@@ -58,7 +72,7 @@ docker compose up --build
 # API disponível em http://localhost:3333/api e documentação em http://localhost:3333/docs
 ```
 
-Os dados persistem no volume nomeado `api-data`.
+Os dados persistem no volume nomeado `pgdata`.
 
 ## Documentação da API
 

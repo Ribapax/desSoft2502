@@ -6,10 +6,10 @@ graph TD
     C["Camada de Domínio<br/>• Entidades (interfaces TS)
 • Enums de status e AppError
 • Contratos consumidos por serviços"]
-    D["Camada de Persistência<br/>• Repositórios better-sqlite3
+    D["Camada de Persistência<br/>• Repositórios PostgreSQL (pg)
 • Consultas parametrizadas
 • Gerenciamento de conexões"]
-    E["Banco de Dados (SQLite/arquivo)"]
+    E["Banco de Dados (PostgreSQL)"]
 
     A <--> B
     B <--> C

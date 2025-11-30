@@ -1,10 +1,27 @@
 classDiagram
+    class Tenant {
+        +id: string
+        +name: string
+        +description?: string
+        +status: boolean
+        +createdAt: string
+        +roles?: Role[]
+    }
+
+    class Role {
+        +id: string
+        +name: string
+        +description?: string
+    }
+
     class User {
         +id: string
         +name: string
         +email: string
         +phone?: string
         +createdAt: string
+        +roles: Role[]
+        +tenantIds?: string[]
     }
 
     class Space {
@@ -14,6 +31,7 @@ classDiagram
         +capacity: number
         +pricePerHour: number
         +coverImageUrl?: string
+        +tenantId?: string
         +createdAt: string
     }
 
@@ -56,3 +74,5 @@ classDiagram
     Payment --> Reservation : reservationId
     Reservation --> ReservationStatus
     Payment --> PaymentStatus
+    User --> Role : roles
+    Tenant --> Role : roles

@@ -17,7 +17,7 @@ const buildUserPayload = () => ({
   email: `user${nextId()}@example.com`,
   password: 'Senha@123',
   phone: '55999999999',
-  roles: ['admin']
+  roles: ['master']
 });
 
 const buildSpacePayload = () => ({

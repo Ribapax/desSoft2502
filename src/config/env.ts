@@ -1,4 +1,3 @@
-import path from 'node:path';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -14,6 +13,11 @@ const parsePort = (value: string | undefined): number => {
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? 'development',
   port: parsePort(process.env.PORT),
-  databaseFile:
-    process.env.DATABASE_FILE ?? path.resolve(process.cwd(), 'data/database.sqlite')
+  database: {
+    host: process.env.DB_HOST ?? 'postgres',
+    port: parsePort(process.env.DB_PORT ?? '5432'),
+    name: process.env.DB_NAME ?? 'seu_cantinho',
+    user: process.env.DB_USER ?? 'seucantinho',
+    password: process.env.DB_PASSWORD ?? 'seucantinho'
+  }
 };

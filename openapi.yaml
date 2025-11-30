@@ -56,19 +56,80 @@ paths:
                 $ref: '#/components/schemas/User'
         '409':
           $ref: '#/components/responses/Conflict'
-  /api/users/{id}:
+  /api/tenants:
     get:
-      summary: Consulta usuário
-      tags: [Usuários]
+      summary: Lista tenants
+      tags: [Tenants]
+      responses:
+        '200':
+          description: Lista de tenants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tenant'
+    post:
+      summary: Cria tenant
+      tags: [Tenants]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTenantPayload'
+      responses:
+        '201':
+          description: Tenant criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/tenants/{id}:
+    get:
+      summary: Consulta tenant
+      tags: [Tenants]
       parameters:
         - $ref: '#/components/parameters/ResourceId'
       responses:
         '200':
-          description: Usuário encontrado
+          description: Tenant encontrado
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/Tenant'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Atualiza tenant
+      tags: [Tenants]
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTenantPayload'
+      responses:
+        '200':
+          description: Tenant atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Remove tenant
+      tags: [Tenants]
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '204':
+          description: Tenant removido
         '404':
           $ref: '#/components/responses/NotFound'
   /api/auth/login:
@@ -407,6 +468,10 @@ components:
                 type: string
               description:
                 type: string
+        tenantIds:
+          type: array
+          items:
+            type: string
     CreateUserPayload:
       type: object
       required: [name, email, password]
@@ -421,6 +486,10 @@ components:
         phone:
           type: string
         roles:
+          type: array
+          items:
+            type: string
+        tenantIds:
           type: array
           items:
             type: string
@@ -440,6 +509,10 @@ components:
           type: array
           items:
             type: string
+        tenantIds:
+          type: array
+          items:
+            type: string
     AuthLoginPayload:
       type: object
       required: [email, password]
@@ -454,6 +527,40 @@ components:
       properties:
         user:
           $ref: '#/components/schemas/User'
+    Tenant:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+    CreateTenantPayload:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          type: boolean
+    UpdateTenantPayload:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          type: boolean
     Space:
       type: object
       properties:
@@ -468,6 +575,8 @@ components:
         pricePerHour:
           type: number
         coverImageUrl:
+          type: string
+        tenantId:
           type: string
         createdAt:
           type: string
@@ -486,6 +595,8 @@ components:
           type: number
         coverImageUrl:
           type: string
+        tenantId:
+          type: string
     UpdateSpacePayload:
       type: object
       properties:
@@ -498,6 +609,8 @@ components:
         pricePerHour:
           type: number
         coverImageUrl:
+          type: string
+        tenantId:
           type: string
     ReservationStatus:
       type: string

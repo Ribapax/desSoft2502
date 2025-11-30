@@ -71,6 +71,29 @@ paths:
                 $ref: '#/components/schemas/User'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/auth/login:
+    post:
+      summary: Autentica um usuário
+      tags: [Autenticação]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthLoginPayload'
+      responses:
+        '200':
+          description: Login bem-sucedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthLoginResponse'
+        '401':
+          description: Credenciais inválidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     put:
       summary: Atualiza usuário
       tags: [Usuários]
@@ -373,16 +396,34 @@ components:
         createdAt:
           type: string
           format: date-time
+        roles:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              description:
+                type: string
     CreateUserPayload:
       type: object
-      required: [name, email]
+      required: [name, email, password]
       properties:
         name:
           type: string
         email:
           type: string
+          format: email
+        password:
+          type: string
         phone:
           type: string
+        roles:
+          type: array
+          items:
+            type: string
     UpdateUserPayload:
       type: object
       properties:
@@ -390,8 +431,29 @@ components:
           type: string
         email:
           type: string
+          format: email
+        password:
+          type: string
         phone:
           type: string
+        roles:
+          type: array
+          items:
+            type: string
+    AuthLoginPayload:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    AuthLoginResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
     Space:
       type: object
       properties:

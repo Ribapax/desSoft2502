@@ -99,15 +99,27 @@ curl -X POST http://localhost:3333/api/users \
 curl http://localhost:3333/api/spaces
 ```
 
+## Credenciais de Acesso (Demo)
+
+O sistema já vem com dados de demonstração. Para acessar o frontend:
+
+| Campo | Valor |
+|-------|-------|
+| **URL** | <http://localhost:8080/login> |
+| **Email** | `maria@seucantinho.com` |
+| **Senha** | `senha123` |
+
+Este usuário possui perfil **master** (Dona Maria) com acesso total ao sistema.
+
 ## Seed de dados
 
-Para acelerar validações manuais existe um script de seed que cria:
+O seed é executado automaticamente ao iniciar os containers e cria:
 
-- Usuário `maria@seucantinho.com`
-- Dois espaços pré-configurados
+- Usuário `maria@seucantinho.com` (senha: `senha123`, perfil: master)
+- Dois espaços pré-configurados (Chácara e Salão)
 - Uma reserva confirmada e um pagamento de sinal
 
-Execute:
+Para executar manualmente (desenvolvimento local):
 
 ```bash
 npm run seed

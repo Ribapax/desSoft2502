@@ -289,7 +289,19 @@ docker compose up --build
 # - Frontend: http://localhost:8080
 ```
 
-### 9.3 Verificação Rápida
+### 9.3 Credenciais de Acesso (Demo)
+
+O sistema já vem com dados de demonstração. Para acessar o frontend:
+
+| Campo | Valor |
+|-------|-------|
+| **URL** | <http://localhost:8080/login> |
+| **Email** | `maria@seucantinho.com` |
+| **Senha** | `senha123` |
+
+Este usuário possui perfil **master** (Dona Maria) com acesso total ao sistema.
+
+### 9.4 Verificação Rápida
 
 ```bash
 # Health check

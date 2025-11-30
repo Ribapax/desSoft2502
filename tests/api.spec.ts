@@ -1,7 +1,8 @@
 import request from 'supertest';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../src/server';
 import { resetDatabase } from '../src/infra/database/reset';
+import { runSeed } from '../src/scripts/seed';
 import { ReservationStatus } from '../src/domain/enums/ReservationStatus';
 import { PaymentStatus } from '../src/domain/enums/PaymentStatus';
 
@@ -37,6 +38,11 @@ const futureInterval = () => {
 describe('Seu Cantinho API', () => {
   beforeEach(async () => {
     await resetDatabase();
+  });
+
+  afterAll(async () => {
+    // Re-seed the database after tests to restore demo data
+    await runSeed();
   });
 
   it('cria e lista usuários', async () => {

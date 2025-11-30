@@ -76,8 +76,12 @@ const seedTenants = async () => {
     { name: 'seucantinho-SC', description: 'Filial Santa Catarina', roles: ['admin', 'financial', 'backoffice'] },
     { name: 'seucantinho-RS', description: 'Filial Rio Grande do Sul', roles: ['admin', 'financial', 'backoffice'] }
   ];
+  const existingTenants = await tenantService.list();
   for (const tenant of tenants) {
-    await tenantService.create({ ...tenant, status: true });
+    const existing = existingTenants.find((t) => t.name === tenant.name);
+    if (!existing) {
+      await tenantService.create({ ...tenant, status: true });
+    }
   }
 };
 
@@ -119,7 +123,7 @@ const ensurePayment = async (reservationId: string) => {
   });
 };
 
-const run = async () => {
+export const runSeed = async () => {
   console.log('Executando seed do Seu Cantinho...');
   await seedRoles();
   await seedTenants();
@@ -135,4 +139,7 @@ const run = async () => {
   console.log('Seed concluído com sucesso.');
 };
 
-run();
+// Run seed directly when executed as a script
+if (require.main === module) {
+  runSeed();
+}

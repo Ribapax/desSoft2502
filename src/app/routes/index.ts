@@ -3,9 +3,11 @@ import { UserController } from '../controllers/UserController';
 import { SpaceController } from '../controllers/SpaceController';
 import { ReservationController } from '../controllers/ReservationController';
 import { PaymentController } from '../controllers/PaymentController';
+import { AuthController } from '../controllers/AuthController';
 
 const router = Router();
 
+const authController = new AuthController();
 const userController = new UserController();
 const spaceController = new SpaceController();
 const reservationController = new ReservationController();
@@ -20,6 +22,8 @@ router.get('/users/:id', userController.find);
 router.post('/users', userController.create);
 router.put('/users/:id', userController.update);
 router.delete('/users/:id', userController.delete);
+
+router.post('/auth/login', authController.login);
 
 router.get('/spaces', spaceController.list);
 router.get('/spaces/:id', spaceController.find);

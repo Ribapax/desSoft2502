@@ -9,7 +9,7 @@ const auth = useAuthStore();
 const dropdownOpen = ref(false);
 
 const isActive = (name: string) => route.name === name;
-const isStaff = computed(() => auth.roles.some((role) => role !== 'CLIENTE'));
+const isStaff = computed(() => auth.roles.some((role) => role.toLowerCase() !== 'client'));
 const isAuthenticated = computed(() => !!auth.email);
 
 const toggleDropdown = () => {
@@ -29,29 +29,35 @@ const logout = () => {
 <template>
   <main class="page">
     <header class="nav">
-      <RouterLink class="brand" :to="isStaff ? '/admin' : '/'">
-        <span class="dot"></span>
-        <span>Seu Cantinho</span>
-      </RouterLink>
+      <div class="brand-row">
+        <RouterLink class="brand" :to="isStaff ? '/admin' : '/'">
+          <span class="dot"></span>
+          <span>Seu Cantinho</span>
+        </RouterLink>
+        <RouterLink
+          v-if="!isStaff"
+          class="btn btn-secondary catalog-btn"
+          :class="{ active: isActive('catalog') }"
+          to="/catalogo"
+        >
+          Catálogo
+        </RouterLink>
+      </div>
       <nav class="nav-links">
-        <template v-if="isStaff">
-          <button class="btn btn-secondary" type="button" @click="logout">Sair</button>
+        <template v-if="!isStaff">
+          <RouterLink :class="{ active: isActive('sobre') }" to="/sobre">Sobre</RouterLink>
+          <RouterLink :class="{ active: isActive('devs') }" to="/devs">Desenvolvedores</RouterLink>
         </template>
-        <template v-else>
-        <RouterLink :class="{ active: isActive('sobre') }" to="/sobre">Sobre</RouterLink>
-        <RouterLink :class="{ active: isActive('devs') }" to="/devs">Desenvolvedores</RouterLink>
-        <RouterLink :class="{ active: isActive('catalog') }" to="/catalogo">Catálogo</RouterLink>
         <div v-if="!isAuthenticated" class="dropdown" :class="{ open: dropdownOpen }">
           <button class="btn btn-secondary" type="button" @click="toggleDropdown">Acessar ▾</button>
           <div class="dropdown-menu">
             <RouterLink :class="{ active: isActive('login') }" to="/login" @click="closeDropdown">Entrar</RouterLink>
-              <RouterLink :class="{ active: isActive('register') }" to="/register" @click="closeDropdown">
-                Registre-se
-              </RouterLink>
-            </div>
+            <RouterLink :class="{ active: isActive('register') }" to="/register" @click="closeDropdown"> 
+              Registre-se
+            </RouterLink>
           </div>
-          <button v-else class="btn btn-secondary" type="button" @click="logout">Sair</button>
-        </template>
+        </div>
+        <button v-else class="btn btn-secondary" type="button" @click="logout">Sair</button>
       </nav>
     </header>
 

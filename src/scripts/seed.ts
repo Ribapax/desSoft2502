@@ -98,6 +98,8 @@ const ensureReservation = async (userId: string, spaceId: string) => {
     spaceId,
     startDate: start.toISOString(),
     endDate: end.toISOString(),
+    checkInTime: '09:00',
+    checkOutTime: '14:00',
     totalPrice: 1600,
     status: ReservationStatus.Confirmed
   });

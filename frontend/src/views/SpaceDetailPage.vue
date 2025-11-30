@@ -4,11 +4,13 @@ import { useRoute } from 'vue-router';
 import Swal from 'sweetalert2';
 import { spaceService, type SpaceResponse } from '../services/spaceService';
 import { tenantService, type TenantResponse } from '../services/tenantService';
+import { useAuthStore } from '../stores/auth';
 
 const route = useRoute();
 const space = ref<SpaceResponse | null>(null);
 const tenant = ref<TenantResponse | null>(null);
 const loading = ref(false);
+const auth = useAuthStore();
 
 const fetchDetail = async () => {
   loading.value = true;
@@ -36,6 +38,30 @@ const fetchDetail = async () => {
 };
 
 onMounted(fetchDetail);
+const handleReserve = () => {
+  const isClient = auth.roles.map((r) => r.toLowerCase()).includes('client');
+  if (!auth.email || !isClient) {
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'info',
+      title: 'Para reservar, entre como cliente.',
+      timer: 2000,
+      showConfirmButton: false,
+      timerProgressBar: true
+    });
+    return;
+  }
+  Swal.fire({
+    toast: true,
+    position: 'top-end',
+    icon: 'info',
+    title: 'Fluxo de reserva em breve.',
+    timer: 2000,
+    showConfirmButton: false,
+    timerProgressBar: true
+  });
+};
 </script>
 
 <template>
@@ -59,7 +85,7 @@ onMounted(fetchDetail);
         <div class="calendar-placeholder tall">
           <p class="muted">Calendário em breve</p>
         </div>
-        <button class="btn btn-primary full" type="button">Reservar</button>
+        <button class="btn btn-primary full" type="button" @click="handleReserve">Reservar</button>
       </aside>
     </div>
   </section>

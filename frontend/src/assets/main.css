@@ -72,6 +72,17 @@ a {
   font-weight: 600;
 }
 
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.catalog-btn {
+  padding: 8px 12px;
+  min-height: auto;
+}
+
 .nav-links button,
 .nav-links a {
   padding: 8px 12px;

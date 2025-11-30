@@ -5,6 +5,9 @@ export interface Space {
   capacity: number;
   pricePerHour: number;
   coverImageUrl?: string;
+  checkInTime: string;
+  checkOutTime: string;
+  signalPercentage: number;
   tenantId?: string;
   createdAt: string;
 }

@@ -12,6 +12,7 @@ const showCreate = ref(false);
 const showEditId = ref<string | null>(null);
 const showViewId = ref<string | null>(null);
 const selectedSpace = ref<SpaceResponse | null>(null);
+const showCompleteId = ref<string | null>(null);
 
 const fetchData = async () => {
   loading.value = true;
@@ -43,6 +44,7 @@ const closeModals = () => {
   showCreate.value = false;
   showEditId.value = null;
   showViewId.value = null;
+  showCompleteId.value = null;
   selectedSpace.value = null;
 };
 
@@ -176,6 +178,9 @@ onMounted(fetchData);
           <div class="cta-row spaced">
             <button class="btn btn-secondary" type="button" @click="openView(space)">Ver</button>
             <button class="btn btn-primary" type="button" @click="openEdit(space)">Editar</button>
+            <button class="btn btn-secondary" type="button" @click="() => { selectedSpace.value = space; showCompleteId.value = space.id; }">
+              Completar cadastro
+            </button>
           </div>
         </div>
       </div>
@@ -215,6 +220,21 @@ onMounted(fetchData);
         <p><strong>Preço/hora:</strong> R$ {{ selectedSpace.pricePerHour.toFixed(2) }}</p>
         <p><strong>Filial:</strong> {{ tenants.find((t) => t.id === selectedSpace.tenantId)?.name ?? '—' }}</p>
         <p class="muted">Criado em: {{ new Date(selectedSpace.createdAt).toLocaleString() }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div v-if="showCompleteId && selectedSpace" class="modal-backdrop" @click.self="closeModals">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Completar cadastro do espaço</h3>
+        <button class="close" type="button" @click="closeModals">×</button>
+      </div>
+      <div class="modal-body">
+        <p>Upload de imagem de capa (em breve)</p>
+        <input class="input" type="file" disabled />
+        <p>Upload de demais imagens (em breve)</p>
+        <input class="input" type="file" multiple disabled />
       </div>
     </div>
   </div>

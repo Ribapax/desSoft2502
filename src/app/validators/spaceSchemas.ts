@@ -6,6 +6,9 @@ export const createSpaceSchema = z.object({
   capacity: z.number().int().positive(),
   pricePerHour: z.number().nonnegative(),
   coverImageUrl: z.string().url().optional(),
+  checkInTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+  checkOutTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+  signalPercentage: z.number().min(0).max(100).optional(),
   tenantId: z.string().uuid().optional()
 });
 

@@ -8,6 +8,8 @@ interface CreateReservationDTO {
   spaceId: string;
   startDate: string;
   endDate: string;
+  checkInTime: string;
+  checkOutTime: string;
   totalPrice: number;
   status: ReservationStatus;
 }
@@ -17,6 +19,8 @@ interface UpdateReservationDTO {
   spaceId?: string;
   startDate?: string;
   endDate?: string;
+  checkInTime?: string;
+  checkOutTime?: string;
   totalPrice?: number;
   status?: ReservationStatus;
 }
@@ -35,6 +39,8 @@ export class ReservationRepository {
       spaceId: row.space_id,
       startDate: row.start_date,
       endDate: row.end_date,
+      checkInTime: row.check_in_time,
+      checkOutTime: row.check_out_time,
       totalPrice: Number(row.total_price),
       status: row.status as ReservationStatus,
       createdAt: row.created_at,
@@ -78,14 +84,16 @@ export class ReservationRepository {
     const now = new Date().toISOString();
     await dbConnection.query(
       `INSERT INTO reservations (
-        id, user_id, space_id, start_date, end_date, total_price, status, created_at, updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+        id, user_id, space_id, start_date, end_date, check_in_time, check_out_time, total_price, status, created_at, updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
       [
         id,
         data.userId,
         data.spaceId,
         data.startDate,
         data.endDate,
+        data.checkInTime,
+        data.checkOutTime,
         data.totalPrice,
         data.status,
         now,
@@ -120,6 +128,14 @@ export class ReservationRepository {
       fields.push('end_date = ?');
       values.push(data.endDate);
     }
+    if (data.checkInTime !== undefined) {
+      fields.push('check_in_time = ?');
+      values.push(data.checkInTime);
+    }
+    if (data.checkOutTime !== undefined) {
+      fields.push('check_out_time = ?');
+      values.push(data.checkOutTime);
+    }
     if (data.totalPrice !== undefined) {
       fields.push('total_price = ?');
       values.push(data.totalPrice);
@@ -151,17 +167,27 @@ export class ReservationRepository {
     await dbConnection.query('DELETE FROM reservations WHERE id = $1', [id]);
   }
 
-  public async countOverlaps(spaceId: string, startDate: string, endDate: string, excludeId?: string): Promise<number> {
-    const params: any[] = [spaceId, startDate, endDate];
+  public async countOverlaps(
+    spaceId: string,
+    startDate: string,
+    endDate: string,
+    checkInTime: string,
+    checkOutTime: string,
+    excludeId?: string
+  ): Promise<number> {
+    const params: any[] = [spaceId, startDate, endDate, checkInTime, checkOutTime];
     let query = `
       SELECT COUNT(*) as count FROM reservations
       WHERE space_id = $1
         AND status != 'CANCELLED'
-        AND NOT (end_date <= $2 OR start_date >= $3)
+        AND NOT (
+          (end_date::date + check_out_time <= ($2::date + $4::time))
+          OR (start_date::date + check_in_time >= ($3::date + $5::time))
+        )
     `;
 
     if (excludeId) {
-      query += ' AND id != $4';
+      query += ' AND id != $6';
       params.push(excludeId);
     }
 

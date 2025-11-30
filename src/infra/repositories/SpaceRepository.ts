@@ -8,6 +8,9 @@ interface CreateSpaceDTO {
   capacity: number;
   pricePerHour: number;
   coverImageUrl?: string;
+  checkInTime?: string;
+  checkOutTime?: string;
+  signalPercentage?: number;
   tenantId?: string;
 }
 
@@ -17,6 +20,9 @@ interface UpdateSpaceDTO {
   capacity?: number;
   pricePerHour?: number;
   coverImageUrl?: string;
+  checkInTime?: string;
+  checkOutTime?: string;
+  signalPercentage?: number;
   tenantId?: string;
 }
 
@@ -29,6 +35,9 @@ export class SpaceRepository {
       capacity: row.capacity,
       pricePerHour: Number(row.price_per_hour),
       coverImageUrl: row.cover_image_url ?? undefined,
+      checkInTime: row.check_in_time,
+      checkOutTime: row.check_out_time,
+      signalPercentage: Number(row.signal_percentage),
       tenantId: row.tenant_id ?? undefined,
       createdAt: row.created_at
     };
@@ -49,8 +58,23 @@ export class SpaceRepository {
     const id = randomUUID();
     const createdAt = new Date().toISOString();
     await dbConnection.query(
-      'INSERT INTO spaces (id, name, description, capacity, price_per_hour, cover_image_url, tenant_id, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
-      [id, data.name, data.description, data.capacity, data.pricePerHour, data.coverImageUrl ?? null, data.tenantId ?? null, createdAt]
+      `INSERT INTO spaces (
+        id, name, description, capacity, price_per_hour, cover_image_url, tenant_id,
+        check_in_time, check_out_time, signal_percentage, created_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+      [
+        id,
+        data.name,
+        data.description,
+        data.capacity,
+        data.pricePerHour,
+        data.coverImageUrl ?? null,
+        data.tenantId ?? null,
+        data.checkInTime ?? '08:00',
+        data.checkOutTime ?? '18:00',
+        data.signalPercentage ?? 50,
+        createdAt
+      ]
     );
 
     const created = await this.findById(id);
@@ -83,6 +107,18 @@ export class SpaceRepository {
     if (data.coverImageUrl !== undefined) {
       fields.push('cover_image_url = ?');
       values.push(data.coverImageUrl);
+    }
+    if (data.checkInTime !== undefined) {
+      fields.push('check_in_time = ?');
+      values.push(data.checkInTime);
+    }
+    if (data.checkOutTime !== undefined) {
+      fields.push('check_out_time = ?');
+      values.push(data.checkOutTime);
+    }
+    if (data.signalPercentage !== undefined) {
+      fields.push('signal_percentage = ?');
+      values.push(data.signalPercentage);
     }
     if (data.tenantId !== undefined) {
       fields.push('tenant_id = ?');

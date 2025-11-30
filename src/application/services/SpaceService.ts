@@ -8,6 +8,9 @@ interface CreateSpaceInput {
   capacity: number;
   pricePerHour: number;
   coverImageUrl?: string;
+  checkInTime?: string;
+  checkOutTime?: string;
+  signalPercentage?: number;
   tenantId?: string;
 }
 
@@ -17,6 +20,9 @@ interface UpdateSpaceInput {
   capacity?: number;
   pricePerHour?: number;
   coverImageUrl?: string;
+  checkInTime?: string;
+  checkOutTime?: string;
+  signalPercentage?: number;
   tenantId?: string;
 }
 

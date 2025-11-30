@@ -23,7 +23,10 @@ const form = reactive<SpacePayload>({
   description: props.space?.description ?? '',
   capacity: props.space?.capacity ?? 0,
   pricePerHour: props.space?.pricePerHour ?? 0,
-  coverImageUrl: props.space?.coverImageUrl ?? '',
+  coverImageUrl: undefined,
+  checkInTime: props.space?.checkInTime ?? '08:00',
+  checkOutTime: props.space?.checkOutTime ?? '18:00',
+  signalPercentage: props.space?.signalPercentage ?? 50,
   tenantId: props.space?.tenantId
 });
 
@@ -34,7 +37,10 @@ watch(
     form.description = space?.description ?? '';
     form.capacity = space?.capacity ?? 0;
     form.pricePerHour = space?.pricePerHour ?? 0;
-    form.coverImageUrl = space?.coverImageUrl ?? '';
+    form.coverImageUrl = space?.coverImageUrl ?? undefined;
+    form.checkInTime = space?.checkInTime ?? '08:00';
+    form.checkOutTime = space?.checkOutTime ?? '18:00';
+    form.signalPercentage = space?.signalPercentage ?? 50;
     form.tenantId = space?.tenantId;
   }
 );
@@ -65,10 +71,6 @@ const onSubmit = () => emit('submit', { ...form });
       <input v-model.number="form.pricePerHour" class="input" type="number" min="0" step="0.01" required />
     </label>
     <label class="form-group">
-      <span>Imagem (URL)</span>
-      <input v-model="form.coverImageUrl" class="input" type="url" placeholder="https://example.com/image.jpg" />
-    </label>
-    <label class="form-group">
       <span>Filial</span>
       <select v-model="form.tenantId" class="input">
         <option :value="undefined">Sem vincular</option>
@@ -76,6 +78,18 @@ const onSubmit = () => emit('submit', { ...form });
           {{ tenant.name }}
         </option>
       </select>
+    </label>
+    <label class="form-group">
+      <span>Check-in</span>
+      <input v-model="form.checkInTime" class="input" type="time" required />
+    </label>
+    <label class="form-group">
+      <span>Check-out</span>
+      <input v-model="form.checkOutTime" class="input" type="time" required />
+    </label>
+    <label class="form-group">
+      <span>Percentual de sinal (%)</span>
+      <input v-model.number="form.signalPercentage" class="input" type="number" min="0" max="100" step="1" required />
     </label>
     <div class="cta-row spaced">
       <button class="btn btn-primary" type="submit" :disabled="!canSubmit">Salvar</button>

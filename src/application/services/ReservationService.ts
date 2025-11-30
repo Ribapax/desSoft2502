@@ -47,13 +47,21 @@ export class ReservationService {
   }
 
   public async create(input: CreateReservationInput): Promise<Reservation> {
-    this.ensureDateRange(input.startDate, input.endDate);
+    const space = await this.ensureSpaceExists(input.spaceId);
+    const checkInTime = space.checkInTime ?? '08:00';
+    const checkOutTime = space.checkOutTime ?? '18:00';
+    this.ensureDateRange(input.startDate, input.endDate, checkInTime, checkOutTime);
     await this.ensureUserExists(input.userId);
-    await this.ensureSpaceExists(input.spaceId);
-    await this.ensureAvailability(input.spaceId, input.startDate, input.endDate);
+    await this.ensureAvailability(
+      input.spaceId,
+      input.startDate,
+      input.endDate,
+      checkInTime,
+      checkOutTime
+    );
 
     const status = input.status ?? ReservationStatus.Pending;
-    return await this.repository.create({ ...input, status });
+    return await this.repository.create({ ...input, checkInTime, checkOutTime, status });
   }
 
   public async update(id: string, input: UpdateReservationInput): Promise<Reservation> {
@@ -62,17 +70,20 @@ export class ReservationService {
     if (input.userId) {
       await this.ensureUserExists(input.userId);
     }
-    if (input.spaceId) {
-      await this.ensureSpaceExists(input.spaceId);
-    }
-
+    const space = input.spaceId ? await this.ensureSpaceExists(input.spaceId) : await this.ensureSpaceExists(current.spaceId);
     const nextStart = input.startDate ?? current.startDate;
     const nextEnd = input.endDate ?? current.endDate;
+    const nextCheckIn = space.checkInTime ?? current.checkInTime;
+    const nextCheckOut = space.checkOutTime ?? current.checkOutTime;
     const nextSpace = input.spaceId ?? current.spaceId;
-    this.ensureDateRange(nextStart, nextEnd);
-    await this.ensureAvailability(nextSpace, nextStart, nextEnd, id);
+    this.ensureDateRange(nextStart, nextEnd, nextCheckIn, nextCheckOut);
+    await this.ensureAvailability(nextSpace, nextStart, nextEnd, nextCheckIn, nextCheckOut, id);
 
-    const updated = await this.repository.update(id, input);
+    const updated = await this.repository.update(id, {
+      ...input,
+      checkInTime: nextCheckIn,
+      checkOutTime: nextCheckOut
+    });
     if (!updated) {
       throw new AppError('Falha ao atualizar reserva.', 500);
     }
@@ -84,16 +95,23 @@ export class ReservationService {
     await this.repository.delete(id);
   }
 
-  private ensureDateRange(start: string, end: string) {
-    const startDate = new Date(start).getTime();
-    const endDate = new Date(end).getTime();
+  private ensureDateRange(start: string, end: string, checkIn: string, checkOut: string) {
+    const startDate = new Date(`${start.split('T')[0]}T${checkIn}:00Z`).getTime();
+    const endDate = new Date(`${end.split('T')[0]}T${checkOut}:00Z`).getTime();
     if (Number.isNaN(startDate) || Number.isNaN(endDate) || startDate >= endDate) {
       throw new AppError('Intervalo de datas inválido.', 422);
     }
   }
 
-  private async ensureAvailability(spaceId: string, start: string, end: string, excludeId?: string) {
-    const conflicts = await this.repository.countOverlaps(spaceId, start, end, excludeId);
+  private async ensureAvailability(
+    spaceId: string,
+    start: string,
+    end: string,
+    checkIn: string,
+    checkOut: string,
+    excludeId?: string
+  ) {
+    const conflicts = await this.repository.countOverlaps(spaceId, start, end, checkIn, checkOut, excludeId);
     if (conflicts > 0) {
       throw new AppError('Espaço já reservado nesse período.', 409);
     }
@@ -111,5 +129,6 @@ export class ReservationService {
     if (!space) {
       throw new AppError('Espaço informado não existe.', 404);
     }
+    return space;
   }
 }

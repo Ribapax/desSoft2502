@@ -28,6 +28,9 @@ export const migrationStatements = `
     capacity INTEGER NOT NULL CHECK (capacity > 0),
     price_per_hour NUMERIC(12,2) NOT NULL CHECK (price_per_hour >= 0),
     cover_image_url TEXT,
+    check_in_time TIME NOT NULL DEFAULT '08:00',
+    check_out_time TIME NOT NULL DEFAULT '18:00',
+    signal_percentage NUMERIC(5,2) NOT NULL DEFAULT 50 CHECK (signal_percentage >= 0 AND signal_percentage <= 100),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   );
 
@@ -37,6 +40,8 @@ export const migrationStatements = `
     space_id UUID NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
     start_date TIMESTAMPTZ NOT NULL,
     end_date TIMESTAMPTZ NOT NULL,
+    check_in_time TIME NOT NULL DEFAULT '08:00',
+    check_out_time TIME NOT NULL DEFAULT '18:00',
     total_price NUMERIC(12,2) NOT NULL CHECK (total_price >= 0),
     status TEXT NOT NULL CHECK (status IN ('PENDING', 'CONFIRMED', 'CANCELLED')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),

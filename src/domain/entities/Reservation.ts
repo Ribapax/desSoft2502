@@ -6,6 +6,8 @@ export interface Reservation {
   spaceId: string;
   startDate: string;
   endDate: string;
+  checkInTime: string;
+  checkOutTime: string;
   totalPrice: number;
   status: ReservationStatus;
   createdAt: string;

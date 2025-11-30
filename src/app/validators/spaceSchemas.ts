@@ -5,7 +5,8 @@ export const createSpaceSchema = z.object({
   description: z.string().min(10),
   capacity: z.number().int().positive(),
   pricePerHour: z.number().nonnegative(),
-  coverImageUrl: z.string().url().optional()
+  coverImageUrl: z.string().url().optional(),
+  tenantId: z.string().uuid().optional()
 });
 
 export const updateSpaceSchema = createSpaceSchema.partial();

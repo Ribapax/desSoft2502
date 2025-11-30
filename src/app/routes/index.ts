@@ -4,6 +4,7 @@ import { SpaceController } from '../controllers/SpaceController';
 import { ReservationController } from '../controllers/ReservationController';
 import { PaymentController } from '../controllers/PaymentController';
 import { AuthController } from '../controllers/AuthController';
+import { TenantController } from '../controllers/TenantController';
 
 const router = Router();
 
@@ -12,6 +13,7 @@ const userController = new UserController();
 const spaceController = new SpaceController();
 const reservationController = new ReservationController();
 const paymentController = new PaymentController();
+const tenantController = new TenantController();
 
 router.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
@@ -24,6 +26,12 @@ router.put('/users/:id', userController.update);
 router.delete('/users/:id', userController.delete);
 
 router.post('/auth/login', authController.login);
+
+router.get('/tenants', tenantController.list);
+router.get('/tenants/:id', tenantController.find);
+router.post('/tenants', tenantController.create);
+router.put('/tenants/:id', tenantController.update);
+router.delete('/tenants/:id', tenantController.delete);
 
 router.get('/spaces', spaceController.list);
 router.get('/spaces/:id', spaceController.find);

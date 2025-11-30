@@ -4,25 +4,33 @@ import { UserRepository } from '../infra/repositories/UserRepository';
 import { SpaceRepository } from '../infra/repositories/SpaceRepository';
 import { ReservationRepository } from '../infra/repositories/ReservationRepository';
 import { PaymentRepository } from '../infra/repositories/PaymentRepository';
+import { RoleService } from '../application/services/RoleService';
 
 const userRepository = new UserRepository();
 const spaceRepository = new SpaceRepository();
 const reservationRepository = new ReservationRepository();
 const paymentRepository = new PaymentRepository();
+const roleService = new RoleService();
 
-const ensureUser = () => {
-  const existing = userRepository.findByEmail('maria@seucantinho.com');
+const ensureUser = async () => {
+  const existing = await userRepository.findByEmail('maria@seucantinho.com');
   if (existing) {
+    if (!existing.roles.length) {
+      await userRepository.update(existing.id, { roles: ['admin'] });
+      return (await userRepository.findById(existing.id))!;
+    }
     return existing;
   }
   return userRepository.create({
     name: 'Maria Souza',
     email: 'maria@seucantinho.com',
-    phone: '41988887777'
+    password: 'senha123',
+    phone: '41988887777',
+    roles: ['admin']
   });
 };
 
-const ensureSpaces = () => {
+const ensureSpaces = async () => {
   const desired = [
     {
       name: 'Chácara Flor do Campo',
@@ -40,18 +48,29 @@ const ensureSpaces = () => {
     }
   ];
 
-  const current = spaceRepository.findAll();
+  const current = await spaceRepository.findAll();
 
-  return desired.map((space) => {
+  const created = [];
+  for (const space of desired) {
     const existing = current.find((item) => item.name === space.name);
-    return existing ?? spaceRepository.create(space);
-  });
+    created.push(existing ?? (await spaceRepository.create(space)));
+  }
+  return created;
 };
 
-const ensureReservation = (userId: string, spaceId: string) => {
-  const existing = reservationRepository
-    .findAll()
-    .find((reservation) => reservation.userId === userId && reservation.spaceId === spaceId);
+const seedRoles = async () => {
+  await roleService.upsertMany([
+    { name: 'admin', description: 'Usuário administrativo da filial' },
+    { name: 'master', description: 'Usuário administrativo geral' },
+    { name: 'financial', description: 'Usuario financeiro da filial' },
+    { name: 'client', description: 'Cliente' },
+    { name: 'backoffice', description: 'Usuário operador da filial' }
+  ]);
+};
+
+const ensureReservation = async (userId: string, spaceId: string) => {
+  const existingList = await reservationRepository.findAll();
+  const existing = existingList.find((reservation) => reservation.userId === userId && reservation.spaceId === spaceId);
   if (existing) {
     return existing;
   }
@@ -71,8 +90,8 @@ const ensureReservation = (userId: string, spaceId: string) => {
   });
 };
 
-const ensurePayment = (reservationId: string) => {
-  const existing = paymentRepository.findByReservation(reservationId)[0];
+const ensurePayment = async (reservationId: string) => {
+  const existing = (await paymentRepository.findByReservation(reservationId))[0];
   if (existing) {
     return existing;
   }
@@ -85,12 +104,13 @@ const ensurePayment = (reservationId: string) => {
   });
 };
 
-const run = () => {
+const run = async () => {
   console.log('Executando seed do Seu Cantinho...');
-  const user = ensureUser();
-  const spaces = ensureSpaces();
-  const reservation = ensureReservation(user.id, spaces[0].id);
-  const payment = ensurePayment(reservation.id);
+  await seedRoles();
+  const user = await ensureUser();
+  const spaces = await ensureSpaces();
+  const reservation = await ensureReservation(user.id, spaces[0].id);
+  const payment = await ensurePayment(reservation.id);
 
   console.log('Usuário base:', user.email);
   console.log('Espaços cadastrados:', spaces.map((space) => space.name).join(', '));

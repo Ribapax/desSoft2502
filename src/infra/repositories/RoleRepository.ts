@@ -22,6 +22,16 @@ export class RoleRepository {
     return row ? { id: String(row.id), name: row.name, description: row.description ?? undefined } : null;
   }
 
+  public async findByNames(names: string[]): Promise<Role[]> {
+    if (!names.length) return [];
+    const placeholders = names.map((_n, idx) => `$${idx + 1}`).join(', ');
+    const result = await dbConnection.query(
+      `SELECT id, name, description FROM roles WHERE name IN (${placeholders})`,
+      names
+    );
+    return result.rows.map((row) => ({ id: String(row.id), name: row.name, description: row.description ?? undefined }));
+  }
+
   public async findById(id: string): Promise<Role | null> {
     const result = await dbConnection.query('SELECT id, name, description FROM roles WHERE id = $1', [id]);
     const row = result.rows[0];

@@ -8,6 +8,7 @@ interface CreateUserInput {
   password: string;
   phone?: string;
   roles?: string[];
+  tenantIds?: string[];
 }
 
 interface UpdateUserInput {
@@ -16,6 +17,7 @@ interface UpdateUserInput {
   phone?: string;
   password?: string;
   roles?: string[];
+  tenantIds?: string[];
 }
 
 export class UserService {
@@ -38,6 +40,11 @@ export class UserService {
     if (existing) {
       throw new AppError('E-mail já cadastrado.', 409);
     }
+    if (input.roles && input.roles.some((r) => r !== 'client' && r !== 'master')) {
+      if (!input.tenantIds || input.tenantIds.length === 0) {
+        throw new AppError('Usuário precisa estar associado a pelo menos uma filial.', 400);
+      }
+    }
     return this.repository.create(input);
   }
 
@@ -47,6 +54,11 @@ export class UserService {
       const existing = await this.repository.findByEmail(input.email);
       if (existing && existing.id !== id) {
         throw new AppError('E-mail já cadastrado.', 409);
+      }
+    }
+    if (input.roles && input.roles.some((r) => r !== 'client' && r !== 'master')) {
+      if (!input.tenantIds || input.tenantIds.length === 0) {
+        throw new AppError('Usuário precisa estar associado a pelo menos uma filial.', 400);
       }
     }
 

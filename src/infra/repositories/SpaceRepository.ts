@@ -8,6 +8,7 @@ interface CreateSpaceDTO {
   capacity: number;
   pricePerHour: number;
   coverImageUrl?: string;
+  tenantId?: string;
 }
 
 interface UpdateSpaceDTO {
@@ -16,6 +17,7 @@ interface UpdateSpaceDTO {
   capacity?: number;
   pricePerHour?: number;
   coverImageUrl?: string;
+  tenantId?: string;
 }
 
 export class SpaceRepository {
@@ -27,6 +29,7 @@ export class SpaceRepository {
       capacity: row.capacity,
       pricePerHour: Number(row.price_per_hour),
       coverImageUrl: row.cover_image_url ?? undefined,
+      tenantId: row.tenant_id ?? undefined,
       createdAt: row.created_at
     };
   }
@@ -46,8 +49,8 @@ export class SpaceRepository {
     const id = randomUUID();
     const createdAt = new Date().toISOString();
     await dbConnection.query(
-      'INSERT INTO spaces (id, name, description, capacity, price_per_hour, cover_image_url, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-      [id, data.name, data.description, data.capacity, data.pricePerHour, data.coverImageUrl ?? null, createdAt]
+      'INSERT INTO spaces (id, name, description, capacity, price_per_hour, cover_image_url, tenant_id, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+      [id, data.name, data.description, data.capacity, data.pricePerHour, data.coverImageUrl ?? null, data.tenantId ?? null, createdAt]
     );
 
     const created = await this.findById(id);
@@ -80,6 +83,10 @@ export class SpaceRepository {
     if (data.coverImageUrl !== undefined) {
       fields.push('cover_image_url = ?');
       values.push(data.coverImageUrl);
+    }
+    if (data.tenantId !== undefined) {
+      fields.push('tenant_id = ?');
+      values.push(data.tenantId);
     }
 
     if (!fields.length) {

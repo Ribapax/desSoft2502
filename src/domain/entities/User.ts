@@ -5,4 +5,5 @@ export interface User {
   phone?: string;
   createdAt: string;
   roles: { id: string; name: string; description?: string }[];
+  tenantIds?: string[];
 }

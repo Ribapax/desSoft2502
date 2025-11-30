@@ -57,6 +57,30 @@ export const migrationStatements = `
     role_id BIGINT NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
     PRIMARY KEY (user_id, role_id)
   );
+
+  CREATE TABLE IF NOT EXISTS tenants (
+    id UUID PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
+    description TEXT,
+    status BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  CREATE TABLE IF NOT EXISTS roles_tenants (
+    role_id BIGINT NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    status BOOLEAN NOT NULL DEFAULT TRUE,
+    PRIMARY KEY (role_id, tenant_id)
+  );
+
+  ALTER TABLE spaces
+    ADD COLUMN IF NOT EXISTS tenant_id UUID REFERENCES tenants(id) ON DELETE SET NULL;
+
+  CREATE TABLE IF NOT EXISTS user_tenants (
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, tenant_id)
+  );
 `;
 
 export const runMigrations = async (client: PoolClient) => {

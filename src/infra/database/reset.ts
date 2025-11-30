@@ -3,6 +3,7 @@ import { dbConnection } from './connection';
 export const resetDatabase = async () => {
   const statements = [
     'DELETE FROM user_roles;',
+    'DELETE FROM user_tenants;',
     'DELETE FROM roles;',
     'DELETE FROM payments;',
     'DELETE FROM reservations;',

@@ -5,12 +5,14 @@ import { SpaceRepository } from '../infra/repositories/SpaceRepository';
 import { ReservationRepository } from '../infra/repositories/ReservationRepository';
 import { PaymentRepository } from '../infra/repositories/PaymentRepository';
 import { RoleService } from '../application/services/RoleService';
+import { TenantService } from '../application/services/TenantService';
 
 const userRepository = new UserRepository();
 const spaceRepository = new SpaceRepository();
 const reservationRepository = new ReservationRepository();
 const paymentRepository = new PaymentRepository();
 const roleService = new RoleService();
+const tenantService = new TenantService();
 
 const ensureUser = async () => {
   const existing = await userRepository.findByEmail('maria@seucantinho.com');
@@ -26,7 +28,7 @@ const ensureUser = async () => {
     email: 'maria@seucantinho.com',
     password: 'senha123',
     phone: '41988887777',
-    roles: ['admin']
+    roles: ['master']
   });
 };
 
@@ -68,6 +70,17 @@ const seedRoles = async () => {
   ]);
 };
 
+const seedTenants = async () => {
+  const tenants = [
+    { name: 'seucantinho-PR', description: 'Filial Paraná', roles: ['admin', 'financial', 'backoffice'] },
+    { name: 'seucantinho-SC', description: 'Filial Santa Catarina', roles: ['admin', 'financial', 'backoffice'] },
+    { name: 'seucantinho-RS', description: 'Filial Rio Grande do Sul', roles: ['admin', 'financial', 'backoffice'] }
+  ];
+  for (const tenant of tenants) {
+    await tenantService.create({ ...tenant, status: true });
+  }
+};
+
 const ensureReservation = async (userId: string, spaceId: string) => {
   const existingList = await reservationRepository.findAll();
   const existing = existingList.find((reservation) => reservation.userId === userId && reservation.spaceId === spaceId);
@@ -107,6 +120,7 @@ const ensurePayment = async (reservationId: string) => {
 const run = async () => {
   console.log('Executando seed do Seu Cantinho...');
   await seedRoles();
+  await seedTenants();
   const user = await ensureUser();
   const spaces = await ensureSpaces();
   const reservation = await ensureReservation(user.id, spaces[0].id);

@@ -8,6 +8,7 @@ interface CreateSpaceInput {
   capacity: number;
   pricePerHour: number;
   coverImageUrl?: string;
+  tenantId?: string;
 }
 
 interface UpdateSpaceInput {
@@ -16,6 +17,7 @@ interface UpdateSpaceInput {
   capacity?: number;
   pricePerHour?: number;
   coverImageUrl?: string;
+  tenantId?: string;
 }
 
 export class SpaceService {

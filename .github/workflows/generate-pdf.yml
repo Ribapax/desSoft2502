@@ -8,7 +8,7 @@ on:
     branches:
       - main
     paths:
-      - 'PRIMEIRA_ENTREGA.md'
+      - 'PDF/PRIMEIRA_ENTREGA.md'
       - 'documentacao.md'
       - 'uml/**/*.mmd'
       - '.github/workflows/generate-pdf.yml'
@@ -26,7 +26,7 @@ jobs:
         id: detect_changes
         run: |
           if git rev-parse HEAD^ >/dev/null 2>&1; then
-            if git diff --quiet HEAD^ HEAD -- PRIMEIRA_ENTREGA.md documentacao.md 'uml/**/*.mmd'; then
+            if git diff --quiet HEAD^ HEAD -- PDF/PRIMEIRA_ENTREGA.md documentacao.md 'uml/**/*.mmd'; then
               echo "pdf_needed=false" >> "$GITHUB_OUTPUT"
             else
               echo "pdf_needed=true" >> "$GITHUB_OUTPUT"
@@ -71,7 +71,7 @@ jobs:
             --user "$(id -u)":"$(id -g)" \
             --entrypoint sh \
             ghcr.io/pandoc/latex:latest \
-            -c "pandoc PRIMEIRA_ENTREGA.md -o PRIMEIRA_ENTREGA.pdf --pdf-engine=xelatex --number-sections --syntax-highlighting=tango && pandoc documentacao.md -o documentacao.pdf --pdf-engine=xelatex --number-sections --syntax-highlighting=tango"
+            -c "pandoc PDF/PRIMEIRA_ENTREGA.md -o PDF/PRIMEIRA_ENTREGA.pdf --pdf-engine=xelatex --number-sections --syntax-highlighting=tango && pandoc documentacao.md -o documentacao.pdf --pdf-engine=xelatex --number-sections --syntax-highlighting=tango"
 
       - name: Upload generated diagrams
         if: steps.detect_changes.outputs.pdf_needed == 'true'
@@ -89,7 +89,7 @@ jobs:
         with:
           name: documentation-pdfs
           path: |
-            PRIMEIRA_ENTREGA.pdf
+            PDF/PRIMEIRA_ENTREGA.pdf
             documentacao.pdf
           retention-days: 90
 
@@ -98,7 +98,7 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add PRIMEIRA_ENTREGA.pdf documentacao.pdf uml/png/*.png uml/svg/*.svg
+          git add PDF/PRIMEIRA_ENTREGA.pdf documentacao.pdf uml/png/*.png uml/svg/*.svg
           git diff --quiet && git diff --staged --quiet || git commit -m "docs: update generated PDF and diagrams [skip ci]"
 
       - name: Push changes

@@ -1,15 +1,41 @@
-version: '3.9'
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: seu-cantinho-db
+    environment:
+      - POSTGRES_USER=seucantinho
+      - POSTGRES_PASSWORD=seucantinho
+      - POSTGRES_DB=seu_cantinho
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
   api:
     build: .
     container_name: seu-cantinho-api
     environment:
       - PORT=3333
-      - DATABASE_FILE=/app/data/database.sqlite
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=seu_cantinho
+      - DB_USER=seucantinho
+      - DB_PASSWORD=seucantinho
     ports:
       - '3333:3333'
-    volumes:
-      - api-data:/app/data
+    depends_on:
+      - db
     restart: unless-stopped
+
+  web:
+    build: ./frontend
+    container_name: seu-cantinho-web
+    ports:
+      - '8080:80'
+    depends_on:
+      - api
+    restart: unless-stopped
+
 volumes:
-  api-data:
+  pgdata:

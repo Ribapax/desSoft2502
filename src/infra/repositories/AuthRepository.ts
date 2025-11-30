@@ -7,6 +7,7 @@ type AuthUser = {
   email: string;
   password: string;
   roles: Role[];
+  tenantIds: string[];
 };
 
 export class AuthRepository {
@@ -25,6 +26,10 @@ export class AuthRepository {
        WHERE ur.user_id = $1`,
       [userRow.id]
     );
+    const tenantResult = await dbConnection.query(
+      'SELECT tenant_id FROM user_tenants WHERE user_id = $1',
+      [userRow.id]
+    );
 
     const roles: Role[] = rolesResult.rows.map((row) => ({
       id: String(row.id),
@@ -37,7 +42,8 @@ export class AuthRepository {
       name: userRow.name,
       email: userRow.email,
       password: userRow.password,
-      roles
+      roles,
+      tenantIds: tenantResult.rows.map((row) => row.tenant_id)
     };
   }
 }

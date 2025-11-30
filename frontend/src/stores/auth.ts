@@ -5,6 +5,7 @@ type AuthDraft = {
   password: string;
   remember: boolean;
   lastSavedAt?: string;
+  tenantIds: string[];
 };
 
 export const useAuthStore = defineStore('auth', {
@@ -13,7 +14,8 @@ export const useAuthStore = defineStore('auth', {
     password: '',
     remember: false,
     lastSavedAt: undefined,
-    roles: []
+    roles: [],
+    tenantIds: []
   }),
   actions: {
     saveDraft(payload: Omit<AuthDraft, 'lastSavedAt'>) {
@@ -22,10 +24,12 @@ export const useAuthStore = defineStore('auth', {
       this.remember = payload.remember;
       this.lastSavedAt = new Date().toISOString();
       this.roles = payload.roles;
+      this.tenantIds = payload.tenantIds;
     },
-    authenticate(payload: { email: string; roles: string[] }) {
+    authenticate(payload: { email: string; roles: string[]; tenantIds?: string[] }) {
       this.email = payload.email;
       this.roles = payload.roles;
+      this.tenantIds = payload.tenantIds ?? [];
     }
   }
 });

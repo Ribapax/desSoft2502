@@ -12,10 +12,11 @@ export const authService = {
       throw new Error('Credenciais inválidas');
     }
 
-    const data = (await res.json()) as { user: { email: string; roles: { name: string }[] } };
+    const data = (await res.json()) as { user: { email: string; roles: { name: string }[]; tenantIds?: string[] } };
     return {
       email: data.user.email,
-      roles: data.user.roles.map((r) => r.name)
+      roles: data.user.roles.map((r) => r.name),
+      tenantIds: data.user.tenantIds ?? []
     };
   }
 };

@@ -576,6 +576,12 @@ components:
           type: number
         coverImageUrl:
           type: string
+        checkInTime:
+          type: string
+        checkOutTime:
+          type: string
+        signalPercentage:
+          type: number
         tenantId:
           type: string
         createdAt:
@@ -595,6 +601,12 @@ components:
           type: number
         coverImageUrl:
           type: string
+        checkInTime:
+          type: string
+        checkOutTime:
+          type: string
+        signalPercentage:
+          type: number
         tenantId:
           type: string
     UpdateSpacePayload:
@@ -610,6 +622,12 @@ components:
           type: number
         coverImageUrl:
           type: string
+        checkInTime:
+          type: string
+        checkOutTime:
+          type: string
+        signalPercentage:
+          type: number
         tenantId:
           type: string
     ReservationStatus:
@@ -630,6 +648,10 @@ components:
         endDate:
           type: string
           format: date-time
+        checkInTime:
+          type: string
+        checkOutTime:
+          type: string
         totalPrice:
           type: number
         status:
@@ -654,6 +676,10 @@ components:
         endDate:
           type: string
           format: date-time
+        checkInTime:
+          type: string
+        checkOutTime:
+          type: string
         totalPrice:
           type: number
         status:
@@ -671,6 +697,10 @@ components:
         endDate:
           type: string
           format: date-time
+        checkInTime:
+          type: string
+        checkOutTime:
+          type: string
         totalPrice:
           type: number
         status:

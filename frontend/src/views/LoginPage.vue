@@ -18,7 +18,7 @@ const form = reactive({
 const submit = async () => {
   try {
     const result = await authService.login(form.email, form.password);
-    authStore.authenticate({ email: result.email, roles: result.roles });
+    authStore.authenticate({ email: result.email, roles: result.roles, tenantIds: (result as any).tenantIds ?? [] });
     statusMessage.value = '';
     const nonClient = result.roles.some((role) => role !== 'CLIENTE');
     setTimeout(() => {

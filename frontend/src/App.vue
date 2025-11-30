@@ -38,12 +38,13 @@ const logout = () => {
           <button class="btn btn-secondary" type="button" @click="logout">Sair</button>
         </template>
         <template v-else>
-          <RouterLink :class="{ active: isActive('sobre') }" to="/sobre">Sobre</RouterLink>
-          <RouterLink :class="{ active: isActive('devs') }" to="/devs">Desenvolvedores</RouterLink>
-          <div v-if="!isAuthenticated" class="dropdown" :class="{ open: dropdownOpen }">
-            <button class="btn btn-secondary" type="button" @click="toggleDropdown">Acessar ▾</button>
-            <div class="dropdown-menu">
-              <RouterLink :class="{ active: isActive('login') }" to="/login" @click="closeDropdown">Entrar</RouterLink>
+        <RouterLink :class="{ active: isActive('sobre') }" to="/sobre">Sobre</RouterLink>
+        <RouterLink :class="{ active: isActive('devs') }" to="/devs">Desenvolvedores</RouterLink>
+        <RouterLink :class="{ active: isActive('catalog') }" to="/catalogo">Catálogo</RouterLink>
+        <div v-if="!isAuthenticated" class="dropdown" :class="{ open: dropdownOpen }">
+          <button class="btn btn-secondary" type="button" @click="toggleDropdown">Acessar ▾</button>
+          <div class="dropdown-menu">
+            <RouterLink :class="{ active: isActive('login') }" to="/login" @click="closeDropdown">Entrar</RouterLink>
               <RouterLink :class="{ active: isActive('register') }" to="/register" @click="closeDropdown">
                 Registre-se
               </RouterLink>

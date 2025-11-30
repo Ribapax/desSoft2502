@@ -554,6 +554,12 @@ h1 {
   padding: 6px 10px;
 }
 
+.pill-success {
+  background: #ecfdf3;
+  color: #166534;
+  border-color: #bbf7d0;
+}
+
 .pill-group {
   display: flex;
   flex-wrap: wrap;
@@ -621,6 +627,47 @@ h1 {
 .user-card {
   display: grid;
   gap: 6px;
+}
+
+.cover-placeholder {
+  width: 100%;
+  height: 140px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+  border: 1px dashed #cbd5e1;
+}
+
+.cover-placeholder.large {
+  height: 220px;
+}
+
+.space-detail-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.calendar-card {
+  display: grid;
+  gap: 12px;
+}
+
+.calendar-placeholder.tall {
+  height: 240px;
+  display: grid;
+  place-items: center;
+  color: #94a3b8;
+}
+
+.btn.full {
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .space-detail-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 900px) {

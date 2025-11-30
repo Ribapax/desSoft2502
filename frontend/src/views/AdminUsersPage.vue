@@ -2,19 +2,24 @@
 import { onMounted, ref } from 'vue';
 import Swal from 'sweetalert2';
 import { userService, type UserPayload, type UserResponse } from '../services/userService';
+import { tenantService, type TenantResponse } from '../services/tenantService';
 import UserForm from '../components/UserForm.vue';
+import { useAuthStore } from '../stores/auth';
 
 const loading = ref(false);
 const users = ref<UserResponse[]>([]);
+const tenants = ref<TenantResponse[]>([]);
 const showCreate = ref(false);
 const showEditId = ref<string | null>(null);
 const showViewId = ref<string | null>(null);
 const selectedUser = ref<UserResponse | null>(null);
+const auth = useAuthStore();
 
 const fetchUsers = async () => {
   loading.value = true;
   try {
     users.value = await userService.list();
+    tenants.value = await tenantService.list();
   } finally {
     loading.value = false;
   }
@@ -31,6 +36,7 @@ const openView = (user: UserResponse) => {
 };
 
 const openEdit = (user: UserResponse) => {
+  if (!canEdit(user)) return;
   selectedUser.value = user;
   showEditId.value = user.id;
 };
@@ -40,6 +46,24 @@ const closeModals = () => {
   showEditId.value = null;
   showViewId.value = null;
   selectedUser.value = null;
+};
+
+const currentUser = () => users.value.find((u) => u.email === auth.email);
+const isMaster = () => auth.roles.map((r) => r.toLowerCase()).includes('master');
+const canEdit = (user: UserResponse) => {
+  const self = user.email === auth.email;
+  const hasMasterRole = user.roles.some((r) => r.name.toLowerCase() === 'master');
+  if (self) return false;
+  if (hasMasterRole && !isMaster()) return false;
+  return true;
+};
+
+const tenantOptions = () => {
+  const me = currentUser();
+  if (me?.tenantIds?.length) {
+    return tenants.value.filter((t) => me.tenantIds?.includes(t.id));
+  }
+  return tenants.value;
 };
 
 const handleCreate = async (payload: UserPayload) => {
@@ -116,6 +140,9 @@ onMounted(fetchUsers);
         <RouterLink class="menu-item" :class="{ active: $route.name === 'admin-users' }" to="/admin/users">
           Usuários
         </RouterLink>
+        <RouterLink class="menu-item" :class="{ active: $route.name === 'admin-tenants' }" to="/admin/tenants">
+          Filiais
+        </RouterLink>
       </nav>
     </aside>
 
@@ -138,7 +165,9 @@ onMounted(fetchUsers);
           </div>
           <div class="cta-row spaced">
             <button class="btn btn-secondary" type="button" @click="openView(user)">Ver</button>
-            <button class="btn btn-primary" type="button" @click="openEdit(user)">Editar</button>
+            <button class="btn btn-primary" type="button" :disabled="!canEdit(user)" @click="openEdit(user)">
+              Editar
+            </button>
           </div>
         </div>
       </div>
@@ -151,7 +180,7 @@ onMounted(fetchUsers);
         <h3>Novo usuário</h3>
         <button class="close" type="button" @click="closeModals">×</button>
       </div>
-      <UserForm mode="create" @submit="handleCreate" />
+      <UserForm mode="create" :tenants="tenantOptions()" @submit="handleCreate" />
     </div>
   </div>
 
@@ -161,7 +190,7 @@ onMounted(fetchUsers);
         <h3>Editar usuário</h3>
         <button class="close" type="button" @click="closeModals">×</button>
       </div>
-      <UserForm :user="selectedUser" mode="edit" @submit="handleUpdate" />
+      <UserForm :user="selectedUser" :tenants="tenantOptions()" mode="edit" @submit="handleUpdate" />
     </div>
   </div>
 

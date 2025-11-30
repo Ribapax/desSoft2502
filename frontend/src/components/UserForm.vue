@@ -2,11 +2,13 @@
 import { computed, reactive, watch } from 'vue';
 import type { UserPayload } from '../services/userService';
 import { useAuthStore } from '../stores/auth';
+import type { TenantResponse } from '../services/tenantService';
 
 type Mode = 'create' | 'edit';
 
 const props = defineProps<{
   user?: { id: string; name: string; email: string; phone?: string; roles: { name: string }[] };
+  tenants?: TenantResponse[];
   mode: Mode;
 }>();
 const emit = defineEmits<{ submit: [payload: UserPayload] }>();
@@ -27,7 +29,8 @@ const form = reactive<UserPayload>({
   email: props.user?.email ?? '',
   phone: props.user?.phone ?? '',
   password: '',
-  roles: props.user?.roles?.map((r) => r.name) ?? ['client']
+  roles: props.user?.roles?.map((r) => r.name) ?? ['client'],
+  tenantIds: props.user && 'tenantIds' in props.user ? (props.user as any).tenantIds ?? [] : []
 });
 
 watch(
@@ -38,19 +41,37 @@ watch(
     form.phone = user?.phone ?? '';
     form.password = '';
     form.roles = user?.roles?.map((r) => r.name) ?? ['client'];
+    form.tenantIds = (user as any)?.tenantIds ?? [];
   }
 );
 
 const canSubmit = computed(() => {
   const hasRoles = form.roles.length > 0;
+  const needsTenant = form.roles.some((r) => r !== 'client' && r !== 'master');
+  const hasTenant = !needsTenant || (form.tenantIds && form.tenantIds.length > 0);
   const hasRequired =
-    form.name && form.email && hasRoles && (props.mode === 'edit' || (form.password && form.password.length >= 6));
+    form.name &&
+    form.email &&
+    hasRoles &&
+    hasTenant &&
+    (props.mode === 'edit' || (form.password && form.password.length >= 6));
   return Boolean(hasRequired);
 });
 
 const toggleRole = (role: string) => {
   form.roles = [role];
 };
+
+const toggleTenant = (tenantId: string) => {
+  if (!form.tenantIds) form.tenantIds = [];
+  if (form.tenantIds.includes(tenantId)) {
+    form.tenantIds = form.tenantIds.filter((id) => id !== tenantId);
+  } else {
+    form.tenantIds = [...form.tenantIds, tenantId];
+  }
+};
+
+const showTenantSelector = computed(() => form.roles.some((r) => r !== 'client' && r !== 'master'));
 
 const onSubmit = () => {
   emit('submit', { ...form, roles: [...form.roles] });
@@ -88,6 +109,16 @@ const onSubmit = () => {
             @change="() => toggleRole(role)"
           />
           <span>{{ role }}</span>
+        </label>
+      </div>
+    </div>
+
+    <div v-if="isAuthenticated && showTenantSelector" class="form-group">
+      <span>Filiais</span>
+      <div class="pill-group">
+        <label v-for="tenant in tenants ?? []" :key="tenant.id" class="checkbox-pill">
+          <input type="checkbox" :checked="form.tenantIds?.includes(tenant.id)" @change="() => toggleTenant(tenant.id)" />
+          <span>{{ tenant.name }}</span>
         </label>
       </div>
     </div>

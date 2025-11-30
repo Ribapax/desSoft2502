@@ -5,6 +5,7 @@ export type UserResponse = {
   phone?: string;
   createdAt: string;
   roles: { id: string; name: string }[];
+  tenantIds?: string[];
 };
 
 export type UserPayload = {
@@ -13,6 +14,7 @@ export type UserPayload = {
   phone?: string;
   password?: string;
   roles?: string[];
+  tenantIds?: string[];
 };
 
 const BASE_URL = 'http://localhost:3333/api/users';

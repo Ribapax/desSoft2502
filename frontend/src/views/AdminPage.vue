@@ -13,6 +13,12 @@
         <RouterLink class="menu-item" :class="{ active: $route.name === 'admin-users' }" to="/admin/users">
           Usuários
         </RouterLink>
+        <RouterLink class="menu-item" :class="{ active: $route.name === 'admin-tenants' }" to="/admin/tenants">
+          Filiais
+        </RouterLink>
+        <RouterLink class="menu-item" :class="{ active: $route.name === 'admin-spaces' }" to="/admin/spaces">
+          Espaços
+        </RouterLink>
         <a class="menu-item disabled" href="#">Reservas</a>
         <a class="menu-item disabled" href="#">Financeiro</a>
       </nav>

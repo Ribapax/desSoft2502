@@ -15,7 +15,9 @@ const nextId = () => {
 const buildUserPayload = () => ({
   name: `Usuário ${nextId()}`,
   email: `user${nextId()}@example.com`,
-  phone: '55999999999'
+  password: 'Senha@123',
+  phone: '55999999999',
+  roles: ['admin']
 });
 
 const buildSpacePayload = () => ({
@@ -33,8 +35,8 @@ const futureInterval = () => {
 };
 
 describe('Seu Cantinho API', () => {
-  beforeEach(() => {
-    resetDatabase();
+  beforeEach(async () => {
+    await resetDatabase();
   });
 
   it('cria e lista usuários', async () => {

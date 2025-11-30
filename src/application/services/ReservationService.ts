@@ -39,7 +39,7 @@ export class ReservationService {
   }
 
   public async find(id: string): Promise<Reservation> {
-    const reservation = this.repository.findById(id);
+    const reservation = await this.repository.findById(id);
     if (!reservation) {
       throw new AppError('Reserva não encontrada.', 404);
     }
@@ -50,10 +50,10 @@ export class ReservationService {
     this.ensureDateRange(input.startDate, input.endDate);
     await this.ensureUserExists(input.userId);
     await this.ensureSpaceExists(input.spaceId);
-    this.ensureAvailability(input.spaceId, input.startDate, input.endDate);
+    await this.ensureAvailability(input.spaceId, input.startDate, input.endDate);
 
     const status = input.status ?? ReservationStatus.Pending;
-    return this.repository.create({ ...input, status });
+    return await this.repository.create({ ...input, status });
   }
 
   public async update(id: string, input: UpdateReservationInput): Promise<Reservation> {
@@ -70,9 +70,9 @@ export class ReservationService {
     const nextEnd = input.endDate ?? current.endDate;
     const nextSpace = input.spaceId ?? current.spaceId;
     this.ensureDateRange(nextStart, nextEnd);
-    this.ensureAvailability(nextSpace, nextStart, nextEnd, id);
+    await this.ensureAvailability(nextSpace, nextStart, nextEnd, id);
 
-    const updated = this.repository.update(id, input);
+    const updated = await this.repository.update(id, input);
     if (!updated) {
       throw new AppError('Falha ao atualizar reserva.', 500);
     }
@@ -81,7 +81,7 @@ export class ReservationService {
 
   public async delete(id: string): Promise<void> {
     await this.find(id);
-    this.repository.delete(id);
+    await this.repository.delete(id);
   }
 
   private ensureDateRange(start: string, end: string) {
@@ -92,22 +92,22 @@ export class ReservationService {
     }
   }
 
-  private ensureAvailability(spaceId: string, start: string, end: string, excludeId?: string) {
-    const conflicts = this.repository.countOverlaps(spaceId, start, end, excludeId);
+  private async ensureAvailability(spaceId: string, start: string, end: string, excludeId?: string) {
+    const conflicts = await this.repository.countOverlaps(spaceId, start, end, excludeId);
     if (conflicts > 0) {
       throw new AppError('Espaço já reservado nesse período.', 409);
     }
   }
 
   private async ensureUserExists(userId: string) {
-    const user = this.userRepository.findById(userId);
+    const user = await this.userRepository.findById(userId);
     if (!user) {
       throw new AppError('Usuário informado não existe.', 404);
     }
   }
 
   private async ensureSpaceExists(spaceId: string) {
-    const space = this.spaceRepository.findById(spaceId);
+    const space = await this.spaceRepository.findById(spaceId);
     if (!space) {
       throw new AppError('Espaço informado não existe.', 404);
     }

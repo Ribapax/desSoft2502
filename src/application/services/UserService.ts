@@ -5,13 +5,17 @@ import { UserRepository } from '../../infra/repositories/UserRepository';
 interface CreateUserInput {
   name: string;
   email: string;
+  password: string;
   phone?: string;
+  roles?: string[];
 }
 
 interface UpdateUserInput {
   name?: string;
   email?: string;
   phone?: string;
+  password?: string;
+  roles?: string[];
 }
 
 export class UserService {
@@ -22,7 +26,7 @@ export class UserService {
   }
 
   public async find(id: string): Promise<User> {
-    const user = this.repository.findById(id);
+    const user = await this.repository.findById(id);
     if (!user) {
       throw new AppError('Usuário não encontrado.', 404);
     }
@@ -30,7 +34,7 @@ export class UserService {
   }
 
   public async create(input: CreateUserInput): Promise<User> {
-    const existing = this.repository.findByEmail(input.email);
+    const existing = await this.repository.findByEmail(input.email);
     if (existing) {
       throw new AppError('E-mail já cadastrado.', 409);
     }
@@ -40,13 +44,13 @@ export class UserService {
   public async update(id: string, input: UpdateUserInput): Promise<User> {
     await this.find(id);
     if (input.email) {
-      const existing = this.repository.findByEmail(input.email);
+      const existing = await this.repository.findByEmail(input.email);
       if (existing && existing.id !== id) {
         throw new AppError('E-mail já cadastrado.', 409);
       }
     }
 
-    const updated = this.repository.update(id, input);
+    const updated = await this.repository.update(id, input);
     if (!updated) {
       throw new AppError('Falha ao atualizar usuário.', 500);
     }
@@ -55,6 +59,6 @@ export class UserService {
 
   public async delete(id: string): Promise<void> {
     await this.find(id);
-    this.repository.delete(id);
+    await this.repository.delete(id);
   }
 }

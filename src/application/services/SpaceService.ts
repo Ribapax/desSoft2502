@@ -26,7 +26,7 @@ export class SpaceService {
   }
 
   public async find(id: string): Promise<Space> {
-    const space = this.repository.findById(id);
+    const space = await this.repository.findById(id);
     if (!space) {
       throw new AppError('Espaço não encontrado.', 404);
     }
@@ -39,7 +39,7 @@ export class SpaceService {
 
   public async update(id: string, input: UpdateSpaceInput): Promise<Space> {
     await this.find(id);
-    const updated = this.repository.update(id, input);
+    const updated = await this.repository.update(id, input);
     if (!updated) {
       throw new AppError('Falha ao atualizar espaço.', 500);
     }
@@ -48,6 +48,6 @@ export class SpaceService {
 
   public async delete(id: string): Promise<void> {
     await this.find(id);
-    this.repository.delete(id);
+    await this.repository.delete(id);
   }
 }

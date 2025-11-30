@@ -35,66 +35,72 @@ export class ReservationRepository {
       spaceId: row.space_id,
       startDate: row.start_date,
       endDate: row.end_date,
-      totalPrice: row.total_price,
+      totalPrice: Number(row.total_price),
       status: row.status as ReservationStatus,
       createdAt: row.created_at,
       updatedAt: row.updated_at
     };
   }
 
-  public findAll(filters: ReservationFilters = {}): Reservation[] {
+  public async findAll(filters: ReservationFilters = {}): Promise<Reservation[]> {
     const conditions: string[] = [];
     const params: any[] = [];
 
     if (filters.userId) {
-      conditions.push('user_id = ?');
       params.push(filters.userId);
+      conditions.push(`user_id = $${params.length}`);
     }
     if (filters.spaceId) {
-      conditions.push('space_id = ?');
       params.push(filters.spaceId);
+      conditions.push(`space_id = $${params.length}`);
     }
     if (filters.status) {
-      conditions.push('status = ?');
       params.push(filters.status);
+      conditions.push(`status = $${params.length}`);
     }
 
     const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-    const stmt = dbConnection.prepare(`SELECT * FROM reservations ${whereClause} ORDER BY start_date DESC`);
-    return stmt.all(...params).map((row) => this.mapRow(row));
+    const stmt = await dbConnection.query(
+      `SELECT * FROM reservations ${whereClause} ORDER BY start_date DESC`,
+      params
+    );
+    return stmt.rows.map((row) => this.mapRow(row));
   }
 
-  public findById(id: string): Reservation | null {
-    const stmt = dbConnection.prepare('SELECT * FROM reservations WHERE id = ?');
-    const row = stmt.get(id);
+  public async findById(id: string): Promise<Reservation | null> {
+    const stmt = await dbConnection.query('SELECT * FROM reservations WHERE id = $1', [id]);
+    const row = stmt.rows[0];
     return row ? this.mapRow(row) : null;
   }
 
-  public create(data: CreateReservationDTO): Reservation {
+  public async create(data: CreateReservationDTO): Promise<Reservation> {
     const id = randomUUID();
     const now = new Date().toISOString();
-    const stmt = dbConnection.prepare(
+    await dbConnection.query(
       `INSERT INTO reservations (
         id, user_id, space_id, start_date, end_date, total_price, status, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [
+        id,
+        data.userId,
+        data.spaceId,
+        data.startDate,
+        data.endDate,
+        data.totalPrice,
+        data.status,
+        now,
+        now
+      ]
     );
 
-    stmt.run(
-      id,
-      data.userId,
-      data.spaceId,
-      data.startDate,
-      data.endDate,
-      data.totalPrice,
-      data.status,
-      now,
-      now
-    );
-
-    return this.findById(id)!;
+    const created = await this.findById(id);
+    if (!created) {
+      throw new Error('Falha ao criar reserva.');
+    }
+    return created;
   }
 
-  public update(id: string, data: UpdateReservationDTO): Reservation | null {
+  public async update(id: string, data: UpdateReservationDTO): Promise<Reservation | null> {
     const fields: string[] = [];
     const values: any[] = [];
 
@@ -130,34 +136,37 @@ export class ReservationRepository {
     fields.push('updated_at = ?');
     values.push(new Date().toISOString());
 
-    const query = `UPDATE reservations SET ${fields.join(', ')} WHERE id = ?`;
-    const stmt = dbConnection.prepare(query);
-    stmt.run(...values, id);
+    const setClause = fields
+      .map((field, index) => field.replace('?', `$${index + 1}`))
+      .join(', ');
+    values.push(id);
+
+    const query = `UPDATE reservations SET ${setClause} WHERE id = $${values.length}`;
+    await dbConnection.query(query, values);
 
     return this.findById(id);
   }
 
-  public delete(id: string): void {
-    const stmt = dbConnection.prepare('DELETE FROM reservations WHERE id = ?');
-    stmt.run(id);
+  public async delete(id: string): Promise<void> {
+    await dbConnection.query('DELETE FROM reservations WHERE id = $1', [id]);
   }
 
-  public countOverlaps(spaceId: string, startDate: string, endDate: string, excludeId?: string): number {
+  public async countOverlaps(spaceId: string, startDate: string, endDate: string, excludeId?: string): Promise<number> {
     const params: any[] = [spaceId, startDate, endDate];
     let query = `
       SELECT COUNT(*) as count FROM reservations
-      WHERE space_id = ?
+      WHERE space_id = $1
         AND status != 'CANCELLED'
-        AND NOT (end_date <= ? OR start_date >= ?)
+        AND NOT (end_date <= $2 OR start_date >= $3)
     `;
 
     if (excludeId) {
-      query += ' AND id != ?';
+      query += ' AND id != $4';
       params.push(excludeId);
     }
 
-    const stmt = dbConnection.prepare(query);
-    const result = stmt.get(...params) as { count: number } | undefined;
-    return result?.count ?? 0;
+    const stmt = await dbConnection.query(query, params);
+    const result = stmt.rows[0] as { count: string } | undefined;
+    return result ? Number(result.count) : 0;
   }
 }

@@ -25,43 +25,39 @@ export class SpaceRepository {
       name: row.name,
       description: row.description,
       capacity: row.capacity,
-      pricePerHour: row.price_per_hour,
+      pricePerHour: Number(row.price_per_hour),
       coverImageUrl: row.cover_image_url ?? undefined,
       createdAt: row.created_at
     };
   }
 
-  public findAll(): Space[] {
-    const stmt = dbConnection.prepare('SELECT * FROM spaces ORDER BY created_at DESC');
-    return stmt.all().map((row) => this.mapRow(row));
+  public async findAll(): Promise<Space[]> {
+    const result = await dbConnection.query('SELECT * FROM spaces ORDER BY created_at DESC');
+    return result.rows.map((row) => this.mapRow(row));
   }
 
-  public findById(id: string): Space | null {
-    const stmt = dbConnection.prepare('SELECT * FROM spaces WHERE id = ?');
-    const row = stmt.get(id);
+  public async findById(id: string): Promise<Space | null> {
+    const result = await dbConnection.query('SELECT * FROM spaces WHERE id = $1', [id]);
+    const row = result.rows[0];
     return row ? this.mapRow(row) : null;
   }
 
-  public create(data: CreateSpaceDTO): Space {
+  public async create(data: CreateSpaceDTO): Promise<Space> {
     const id = randomUUID();
     const createdAt = new Date().toISOString();
-    const stmt = dbConnection.prepare(
-      'INSERT INTO spaces (id, name, description, capacity, price_per_hour, cover_image_url, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
-    );
-    stmt.run(
-      id,
-      data.name,
-      data.description,
-      data.capacity,
-      data.pricePerHour,
-      data.coverImageUrl ?? null,
-      createdAt
+    await dbConnection.query(
+      'INSERT INTO spaces (id, name, description, capacity, price_per_hour, cover_image_url, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+      [id, data.name, data.description, data.capacity, data.pricePerHour, data.coverImageUrl ?? null, createdAt]
     );
 
-    return this.findById(id)!;
+    const created = await this.findById(id);
+    if (!created) {
+      throw new Error('Falha ao criar espaço.');
+    }
+    return created;
   }
 
-  public update(id: string, data: UpdateSpaceDTO): Space | null {
+  public async update(id: string, data: UpdateSpaceDTO): Promise<Space | null> {
     const fields: string[] = [];
     const values: any[] = [];
 
@@ -90,15 +86,18 @@ export class SpaceRepository {
       return this.findById(id);
     }
 
-    const query = `UPDATE spaces SET ${fields.join(', ')} WHERE id = ?`;
-    const stmt = dbConnection.prepare(query);
-    stmt.run(...values, id);
+    const setClause = fields
+      .map((field, index) => field.replace('?', `$${index + 1}`))
+      .join(', ');
+    values.push(id);
+
+    const query = `UPDATE spaces SET ${setClause} WHERE id = $${values.length}`;
+    await dbConnection.query(query, values);
 
     return this.findById(id);
   }
 
-  public delete(id: string): void {
-    const stmt = dbConnection.prepare('DELETE FROM spaces WHERE id = ?');
-    stmt.run(id);
+  public async delete(id: string): Promise<void> {
+    await dbConnection.query('DELETE FROM spaces WHERE id = $1', [id]);
   }
 }

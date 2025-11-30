@@ -1,58 +1,138 @@
 import { randomUUID } from 'node:crypto';
 import { dbConnection } from '../database/connection';
+import { Role } from '../../domain/entities/Role';
 import { User } from '../../domain/entities/User';
 
 interface CreateUserDTO {
   name: string;
   email: string;
   phone?: string;
+  password: string;
+  roles?: string[];
 }
 
 interface UpdateUserDTO {
   name?: string;
   email?: string;
   phone?: string;
+  password?: string;
+  roles?: string[];
 }
 
 export class UserRepository {
-  private mapRow(row: any): User {
+  private normalizeEmail(email: string): string {
+    return email.trim().toLowerCase();
+  }
+
+  private mapRow(row: any, roles: Role[] = []): User {
     return {
       id: row.id,
       name: row.name,
       email: row.email,
       phone: row.phone ?? undefined,
-      createdAt: row.created_at
+      createdAt: row.created_at,
+      roles
     };
   }
 
-  public findAll(): User[] {
-    const stmt = dbConnection.prepare('SELECT * FROM users ORDER BY created_at DESC');
-    return stmt.all().map((row) => this.mapRow(row));
+  private async fetchRolesByUserIds(userIds: string[]): Promise<Record<string, Role[]>> {
+    if (!userIds.length) return {};
+    const placeholders = userIds.map((_id, index) => `$${index + 1}`).join(', ');
+    const result = await dbConnection.query(
+      `SELECT ur.user_id, r.id, r.name, r.description
+       FROM user_roles ur
+       JOIN roles r ON r.id = ur.role_id
+       WHERE ur.user_id IN (${placeholders})`,
+      userIds
+    );
+
+    return result.rows.reduce<Record<string, Role[]>>((acc, row) => {
+      const key = row.user_id;
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push({ id: String(row.id), name: row.name, description: row.description ?? undefined });
+      return acc;
+    }, {});
   }
 
-  public findById(id: string): User | null {
-    const stmt = dbConnection.prepare('SELECT * FROM users WHERE id = ?');
-    const row = stmt.get(id);
-    return row ? this.mapRow(row) : null;
+  private async ensureRoles(names: string[] = []): Promise<Role[]> {
+    const normalized = Array.from(new Set(names.map((name) => name.trim()).filter(Boolean)));
+    const roles: Role[] = [];
+    for (const name of normalized) {
+      const existing = await dbConnection.query('SELECT id, name, description FROM roles WHERE name = $1', [name]);
+      if (existing.rows[0]) {
+        const row = existing.rows[0];
+        roles.push({ id: String(row.id), name: row.name, description: row.description ?? undefined });
+        continue;
+      }
+      const created = await dbConnection.query(
+        'INSERT INTO roles (name) VALUES ($1) RETURNING id, name, description',
+        [name]
+      );
+      const row = created.rows[0];
+      roles.push({ id: String(row.id), name: row.name, description: row.description ?? undefined });
+    }
+    return roles;
   }
 
-  public findByEmail(email: string): User | null {
-    const stmt = dbConnection.prepare('SELECT * FROM users WHERE email = ?');
-    const row = stmt.get(email);
-    return row ? this.mapRow(row) : null;
+  private async replaceUserRoles(userId: string, roleIds: string[]): Promise<void> {
+    await dbConnection.query('DELETE FROM user_roles WHERE user_id = $1', [userId]);
+    if (!roleIds.length) return;
+    const values: any[] = [];
+    const inserts = roleIds.map((roleId, index) => {
+      const base = index * 2;
+      values.push(userId, roleId);
+      return `($${base + 1}, $${base + 2})`;
+    });
+    const sql = `INSERT INTO user_roles (user_id, role_id) VALUES ${inserts.join(', ')} ON CONFLICT DO NOTHING`;
+    await dbConnection.query(sql, values);
   }
 
-  public create(data: CreateUserDTO): User {
+  public async findAll(): Promise<User[]> {
+    const result = await dbConnection.query('SELECT * FROM users ORDER BY created_at DESC');
+    const roleMap = await this.fetchRolesByUserIds(result.rows.map((row) => row.id));
+    return result.rows.map((row) => this.mapRow(row, roleMap[row.id] ?? []));
+  }
+
+  public async findById(id: string): Promise<User | null> {
+    const result = await dbConnection.query('SELECT * FROM users WHERE id = $1', [id]);
+    const row = result.rows[0];
+    if (!row) return null;
+    const roleMap = await this.fetchRolesByUserIds([row.id]);
+    return this.mapRow(row, roleMap[row.id] ?? []);
+  }
+
+  public async findByEmail(email: string): Promise<User | null> {
+    const normalized = this.normalizeEmail(email);
+    const result = await dbConnection.query('SELECT * FROM users WHERE email = $1', [normalized]);
+    const row = result.rows[0];
+    if (!row) return null;
+    const roleMap = await this.fetchRolesByUserIds([row.id]);
+    return this.mapRow(row, roleMap[row.id] ?? []);
+  }
+
+  public async create(data: CreateUserDTO): Promise<User> {
     const id = randomUUID();
     const createdAt = new Date().toISOString();
-    const stmt = dbConnection.prepare(
-      'INSERT INTO users (id, name, email, phone, created_at) VALUES (?, ?, ?, ?, ?)' 
+    const email = this.normalizeEmail(data.email);
+    const allRoles = data.roles?.length ? await this.ensureRoles(data.roles) : [];
+
+    await dbConnection.query(
+      'INSERT INTO users (id, name, email, phone, password, created_at) VALUES ($1, $2, $3, $4, $5, $6)',
+      [id, data.name, email, data.phone ?? null, data.password, createdAt]
     );
-    stmt.run(id, data.name, data.email, data.phone ?? null, createdAt);
-    return this.findById(id)!;
+    if (allRoles.length) {
+      await this.replaceUserRoles(id, allRoles.map((role) => role.id));
+    }
+    const created = await this.findById(id);
+    if (!created) {
+      throw new Error('Falha ao criar usuário.');
+    }
+    return created;
   }
 
-  public update(id: string, data: UpdateUserDTO): User | null {
+  public async update(id: string, data: UpdateUserDTO): Promise<User | null> {
     const fields: string[] = [];
     const values: any[] = [];
 
@@ -63,7 +143,7 @@ export class UserRepository {
 
     if (data.email !== undefined) {
       fields.push('email = ?');
-      values.push(data.email);
+      values.push(this.normalizeEmail(data.email));
     }
 
     if (data.phone !== undefined) {
@@ -71,19 +151,32 @@ export class UserRepository {
       values.push(data.phone);
     }
 
+    if (data.password !== undefined) {
+      fields.push('password = ?');
+      values.push(data.password);
+    }
+
     if (!fields.length) {
       return this.findById(id);
     }
 
-    const query = `UPDATE users SET ${fields.join(', ')} WHERE id = ?`;
-    const stmt = dbConnection.prepare(query);
-    stmt.run(...values, id);
+    const setClause = fields
+      .map((field, index) => field.replace('?', `$${index + 1}`))
+      .join(', ');
+    values.push(id);
+
+    const query = `UPDATE users SET ${setClause} WHERE id = $${values.length}`;
+    await dbConnection.query(query, values);
+
+    if (data.roles) {
+      const rolesByName = await this.ensureRoles(data.roles);
+      await this.replaceUserRoles(id, rolesByName.map((role) => role.id));
+    }
 
     return this.findById(id);
   }
 
-  public delete(id: string): void {
-    const stmt = dbConnection.prepare('DELETE FROM users WHERE id = ?');
-    stmt.run(id);
+  public async delete(id: string): Promise<void> {
+    await dbConnection.query('DELETE FROM users WHERE id = $1', [id]);
   }
 }

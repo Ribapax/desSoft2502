@@ -21,41 +21,47 @@ export class PaymentRepository {
     return {
       id: row.id,
       reservationId: row.reservation_id,
-      amount: row.amount,
+      amount: Number(row.amount),
       status: row.status as PaymentStatus,
       paidAt: row.paid_at,
       createdAt: row.created_at
     };
   }
 
-  public findAll(): Payment[] {
-    const stmt = dbConnection.prepare('SELECT * FROM payments ORDER BY paid_at DESC');
-    return stmt.all().map((row) => this.mapRow(row));
+  public async findAll(): Promise<Payment[]> {
+    const result = await dbConnection.query('SELECT * FROM payments ORDER BY paid_at DESC');
+    return result.rows.map((row) => this.mapRow(row));
   }
 
-  public findById(id: string): Payment | null {
-    const stmt = dbConnection.prepare('SELECT * FROM payments WHERE id = ?');
-    const row = stmt.get(id);
+  public async findById(id: string): Promise<Payment | null> {
+    const result = await dbConnection.query('SELECT * FROM payments WHERE id = $1', [id]);
+    const row = result.rows[0];
     return row ? this.mapRow(row) : null;
   }
 
-  public findByReservation(reservationId: string): Payment[] {
-    const stmt = dbConnection.prepare('SELECT * FROM payments WHERE reservation_id = ? ORDER BY paid_at DESC');
-    return stmt.all(reservationId).map((row) => this.mapRow(row));
+  public async findByReservation(reservationId: string): Promise<Payment[]> {
+    const result = await dbConnection.query(
+      'SELECT * FROM payments WHERE reservation_id = $1 ORDER BY paid_at DESC',
+      [reservationId]
+    );
+    return result.rows.map((row) => this.mapRow(row));
   }
 
-  public create(data: CreatePaymentDTO): Payment {
+  public async create(data: CreatePaymentDTO): Promise<Payment> {
     const id = randomUUID();
     const createdAt = new Date().toISOString();
-    const stmt = dbConnection.prepare(
-      'INSERT INTO payments (id, reservation_id, amount, status, paid_at, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+    await dbConnection.query(
+      'INSERT INTO payments (id, reservation_id, amount, status, paid_at, created_at) VALUES ($1, $2, $3, $4, $5, $6)',
+      [id, data.reservationId, data.amount, data.status, data.paidAt, createdAt]
     );
-
-    stmt.run(id, data.reservationId, data.amount, data.status, data.paidAt, createdAt);
-    return this.findById(id)!;
+    const created = await this.findById(id);
+    if (!created) {
+      throw new Error('Falha ao criar pagamento.');
+    }
+    return created;
   }
 
-  public update(id: string, data: UpdatePaymentDTO): Payment | null {
+  public async update(id: string, data: UpdatePaymentDTO): Promise<Payment | null> {
     const fields: string[] = [];
     const values: any[] = [];
 
@@ -76,14 +82,17 @@ export class PaymentRepository {
       return this.findById(id);
     }
 
-    const query = `UPDATE payments SET ${fields.join(', ')} WHERE id = ?`;
-    const stmt = dbConnection.prepare(query);
-    stmt.run(...values, id);
+    const setClause = fields
+      .map((field, index) => field.replace('?', `$${index + 1}`))
+      .join(', ');
+    values.push(id);
+
+    const query = `UPDATE payments SET ${setClause} WHERE id = $${values.length}`;
+    await dbConnection.query(query, values);
     return this.findById(id);
   }
 
-  public delete(id: string): void {
-    const stmt = dbConnection.prepare('DELETE FROM payments WHERE id = ?');
-    stmt.run(id);
+  public async delete(id: string): Promise<void> {
+    await dbConnection.query('DELETE FROM payments WHERE id = $1', [id]);
   }
 }

@@ -14,7 +14,7 @@ export const env = {
   nodeEnv: process.env.NODE_ENV ?? 'development',
   port: parsePort(process.env.PORT),
   database: {
-    host: process.env.DB_HOST ?? 'postgres',
+    host: process.env.DB_HOST ?? 'localhost',
     port: parsePort(process.env.DB_PORT ?? '5432'),
     name: process.env.DB_NAME ?? 'seu_cantinho',
     user: process.env.DB_USER ?? 'seucantinho',

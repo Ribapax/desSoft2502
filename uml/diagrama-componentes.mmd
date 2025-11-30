@@ -3,7 +3,7 @@ graph TB
         ROUTES[Express Router / routes]
         CTRL[Controladores REST]
         VALID[Validadores Zod]
-        MIDDLE["Middlewares (ex.: error handler)"]
+        MIDDLE["Middlewares (CORS, Helmet, error handler)"]
     end
 
     subgraph "Aplicação (src/application)"
@@ -11,6 +11,8 @@ graph TB
         SS[SpaceService]
         RS[ReservationService]
         PS[PaymentService]
+        TS[TenantService]
+        AS[AuthService]
     end
 
     subgraph "Domínio (src/domain)"
@@ -20,11 +22,11 @@ graph TB
     end
 
     subgraph "Persistência (src/infra)"
-        REPOS[Repositórios SQLite]
-        DBCONN[Conexão better-sqlite3]
+        REPOS[Repositórios PostgreSQL]
+        DBCONN[Conexão pg / node-postgres]
     end
 
-    DATA[(data/database.sqlite)]
+    DATA[(PostgreSQL Database)]
 
     ROUTES --> CTRL
     CTRL --> VALID
@@ -33,11 +35,15 @@ graph TB
     CTRL --> SS
     CTRL --> RS
     CTRL --> PS
+    CTRL --> TS
+    CTRL --> AS
 
     US --> ENT
     SS --> ENT
     RS --> ENT
     PS --> ENT
+    TS --> ENT
+    AS --> ENT
 
     ENT --> ENUMS
     ERR --> CTRL
@@ -45,11 +51,15 @@ graph TB
     ERR --> SS
     ERR --> RS
     ERR --> PS
+    ERR --> TS
+    ERR --> AS
 
     US --> REPOS
     SS --> REPOS
     RS --> REPOS
     PS --> REPOS
+    TS --> REPOS
+    AS --> REPOS
 
     REPOS --> DBCONN
     DBCONN --> DATA
@@ -62,6 +72,8 @@ graph TB
     style SS fill:#E8F5E9
     style RS fill:#E8F5E9
     style PS fill:#E8F5E9
+    style TS fill:#E8F5E9
+    style AS fill:#E8F5E9
     style ENT fill:#FFF3E0
     style ENUMS fill:#FFF3E0
     style ERR fill:#FFF3E0

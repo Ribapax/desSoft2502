@@ -2,8 +2,9 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
-COPY tsconfig.json openapi.yaml ./
+COPY tsconfig.json openapi.yaml vitest.config.ts ./
 COPY src ./src
+COPY tests ./tests
 COPY data ./data
 RUN npm run build && npm prune --omit=dev
 
@@ -14,7 +15,11 @@ COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/openapi.yaml ./openapi.yaml
+COPY --from=builder /app/vitest.config.ts ./vitest.config.ts
+COPY --from=builder /app/tsconfig.json ./tsconfig.json
+COPY --from=builder /app/src ./src
 COPY --from=builder /app/data ./data
+COPY --from=builder /app/tests ./tests
 COPY data ./data
 EXPOSE 3333
 CMD ["sh", "-c", "node dist/scripts/migrate.js && node dist/scripts/seed.js && node dist/main.js"]

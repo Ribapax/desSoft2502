@@ -1,4 +1,4 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
   title: API Seu Cantinho
   version: 1.0.0
@@ -155,6 +155,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /api/users/{id}:
+    get:
+      summary: Consulta usuário
+      tags: [Usuários]
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Usuário encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
     put:
       summary: Atualiza usuário
       tags: [Usuários]
@@ -542,6 +557,17 @@ components:
         createdAt:
           type: string
           format: date-time
+        roles:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              description:
+                type: string
     CreateTenantPayload:
       type: object
       required: [name]

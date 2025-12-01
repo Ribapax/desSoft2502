@@ -11,6 +11,8 @@ import AdminSpacesPage from './views/AdminSpacesPage.vue';
 import CatalogPage from './views/CatalogPage.vue';
 import SpaceDetailPage from './views/SpaceDetailPage.vue';
 import MyReservationsPage from './views/MyReservationsPage.vue';
+import AdminReservationsPage from './views/AdminReservationsPage.vue';
+import AdminFinancialPage from './views/AdminFinancialPage.vue';
 import { useAuthStore } from './stores/auth';
 
 const adminRoles = ['admin', 'master', 'financial', 'backoffice'];
@@ -29,7 +31,9 @@ const router = createRouter({
     { path: '/admin', name: 'admin', component: AdminPage, meta: { requiresAdmin: true } },
     { path: '/admin/users', name: 'admin-users', component: AdminUsersPage, meta: { requiresAdmin: true } },
     { path: '/admin/tenants', name: 'admin-tenants', component: AdminTenantsPage, meta: { requiresAdmin: true } },
-    { path: '/admin/spaces', name: 'admin-spaces', component: AdminSpacesPage, meta: { requiresAdmin: true } }
+    { path: '/admin/spaces', name: 'admin-spaces', component: AdminSpacesPage, meta: { requiresAdmin: true } },
+    { path: '/admin/reservations', name: 'admin-reservations', component: AdminReservationsPage, meta: { requiresAdmin: true } },
+    { path: '/admin/financeiro', name: 'admin-financial', component: AdminFinancialPage, meta: { requiresAdmin: true } }
   ]
 });
 

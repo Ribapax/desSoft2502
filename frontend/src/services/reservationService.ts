@@ -43,6 +43,17 @@ export const reservationService = {
     }
     return res.json();
   },
+  async update(id: string, payload: Partial<{ userId: string; spaceId: string; reservationDate: string; paymentId?: string | null }>): Promise<ReservationResponse> {
+    const res = await fetch(`${BASE_URL}/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      throw new Error('Erro ao atualizar reserva');
+    }
+    return res.json();
+  },
   async delete(id: string): Promise<void> {
     const res = await fetch(`${BASE_URL}/${id}`, { method: 'DELETE' });
     if (!res.ok) {

@@ -46,8 +46,12 @@ onMounted(fetchPayments);
         <RouterLink class="menu-item" :class="{ active: $route.name === 'admin-spaces' }" to="/admin/spaces">
           Espaços
         </RouterLink>
-        <a class="menu-item disabled" href="#">Reservas</a>
-        <a class="menu-item disabled" href="#">Financeiro</a>
+        <RouterLink class="menu-item" :class="{ active: $route.name === 'admin-reservations' }" to="/admin/reservations">
+          Reservas
+        </RouterLink>
+        <RouterLink class="menu-item" :class="{ active: $route.name === 'admin-financial' }" to="/admin/financeiro">
+          Financeiro
+        </RouterLink>
       </nav>
     </aside>
 

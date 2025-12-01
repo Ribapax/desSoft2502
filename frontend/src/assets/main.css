@@ -556,6 +556,22 @@ h1 {
   gap: 10px;
 }
 
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.stat {
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+  display: grid;
+  gap: 6px;
+}
+
 .day {
   background: #f8fafc;
   border: 1px solid #e2e8f0;

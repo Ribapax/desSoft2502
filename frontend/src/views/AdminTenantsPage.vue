@@ -153,6 +153,15 @@ onMounted(fetchTenants);
         <RouterLink class="menu-item" :class="{ active: $route.name === 'admin-tenants' }" to="/admin/tenants">
           Filiais
         </RouterLink>
+        <RouterLink class="menu-item" :class="{ active: $route.name === 'admin-spaces' }" to="/admin/spaces">
+          Espaços
+        </RouterLink>
+        <RouterLink class="menu-item" :class="{ active: $route.name === 'admin-reservations' }" to="/admin/reservations">
+          Reservas
+        </RouterLink>
+        <RouterLink class="menu-item" :class="{ active: $route.name === 'admin-financial' }" to="/admin/financeiro">
+          Financeiro
+        </RouterLink>
       </nav>
     </aside>
 

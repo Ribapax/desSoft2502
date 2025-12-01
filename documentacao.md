@@ -95,7 +95,7 @@ O sistema implementa um modelo de papéis (roles) para diferenciar tipos de usu�
 ```typescript
 interface Role {
   id: string;
-  name: string;           // Ex: "master", "admin", "employee", "client"
+  name: string;           // Ex: "master", "admin", "financial", "backoffice", "client"
   description?: string;
 }
 
@@ -114,7 +114,8 @@ interface User {
 |--------|-----------|------------|
 | **master** | Dona Maria / Proprietária | Acesso total a todas as filiais, relatórios financeiros, gestão de usuários |
 | **admin** | Gerente de Filial | Gestão de espaços e reservas da sua filial |
-| **employee** | Atendente | Criar/editar reservas, registrar pagamentos |
+| **financial** | Financeiro | Registrar pagamentos, acompanhar status financeiro |
+| **backoffice** | Operador | Criar/editar reservas, suporte operacional |
 | **client** | Cliente Final | Visualizar espaços, solicitar reservas |
 
 ### 4.3 Fluxo de Reserva por Tipo de Usuário

@@ -37,6 +37,25 @@ export const paymentService = {
     }
     return res.json();
   },
+  async update(
+    id: string,
+    payload: Partial<{
+      totalAmount: number;
+      payed: number;
+      status: string;
+      paidAt: string;
+    }>
+  ): Promise<PaymentResponse> {
+    const res = await fetch(`${BASE_URL}/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      throw new Error('Erro ao atualizar pagamento');
+    }
+    return res.json();
+  },
   async delete(id: string): Promise<void> {
     const res = await fetch(`${BASE_URL}/${id}`, { method: 'DELETE' });
     if (!res.ok) {

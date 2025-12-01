@@ -95,7 +95,7 @@ O sistema implementa um modelo de papéis (roles) para diferenciar tipos de usu�
 ```typescript
 interface Role {
   id: string;
-  name: string;           // Ex: "master", "admin", "employee", "client"
+  name: string;           // Ex: "master", "admin", "financial", "backoffice", "client"
   description?: string;
 }
 
@@ -114,7 +114,8 @@ interface User {
 |--------|-----------|------------|
 | **master** | Dona Maria / Proprietária | Acesso total a todas as filiais, relatórios financeiros, gestão de usuários |
 | **admin** | Gerente de Filial | Gestão de espaços e reservas da sua filial |
-| **employee** | Atendente | Criar/editar reservas, registrar pagamentos |
+| **financial** | Financeiro | Registrar pagamentos, acompanhar status financeiro |
+| **backoffice** | Operador | Criar/editar reservas, suporte operacional |
 | **client** | Cliente Final | Visualizar espaços, solicitar reservas |
 
 ### 4.3 Fluxo de Reserva por Tipo de Usuário
@@ -148,14 +149,14 @@ A prevenção é garantida na **Camada de Aplicação** (`ReservationService`) a
 // src/application/services/ReservationService.ts
 
 public async create(input: CreateReservationInput): Promise<Reservation> {
-  // 1. Valida intervalo de datas
+  // 1. Verifica se espaço existe (necessário para obter horários de check-in/check-out)
+  await this.ensureSpaceExists(input.spaceId);
+  
+  // 2. Valida intervalo de datas
   this.ensureDateRange(input.startDate, input.endDate);
   
-  // 2. Verifica se usuário existe
+  // 3. Verifica se usuário existe
   await this.ensureUserExists(input.userId);
-  
-  // 3. Verifica se espaço existe
-  await this.ensureSpaceExists(input.spaceId);
   
   // 4. VERIFICAÇÃO CRÍTICA: Checa conflitos de horário
   await this.ensureAvailability(input.spaceId, input.startDate, input.endDate);

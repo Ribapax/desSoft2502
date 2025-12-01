@@ -593,6 +593,12 @@ components:
           type: number
         coverImageUrl:
           type: string
+        checkInTime:
+          type: string
+          description: 'Horário de entrada (ex: 14:00)'
+        checkOutTime:
+          type: string
+          description: 'Horário de saída (ex: 12:00)'
         signalPercentage:
           type: number
         tenantId:
@@ -614,6 +620,12 @@ components:
           type: number
         coverImageUrl:
           type: string
+        checkInTime:
+          type: string
+          description: 'Horário de entrada (ex: 14:00)'
+        checkOutTime:
+          type: string
+          description: 'Horário de saída (ex: 12:00)'
         signalPercentage:
           type: number
         tenantId:
@@ -631,6 +643,12 @@ components:
           type: number
         coverImageUrl:
           type: string
+        checkInTime:
+          type: string
+          description: 'Horário de entrada (ex: 14:00)'
+        checkOutTime:
+          type: string
+          description: 'Horário de saída (ex: 12:00)'
         signalPercentage:
           type: number
         tenantId:

@@ -7,6 +7,11 @@ export type PaymentResponse = {
   createdAt: string;
 };
 
+export const PaymentStatus = {
+  SIGNAL: 'SIGNAL',
+  FULL: 'FULL'
+} as const;
+
 const BASE_URL = 'http://localhost:3333/api/payments';
 
 export const paymentService = {

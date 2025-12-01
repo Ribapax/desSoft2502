@@ -1,3 +1,30 @@
+<script setup lang="ts">
+import { computed, onMounted, ref } from 'vue';
+import { paymentService, type PaymentResponse } from '../services/paymentService';
+
+const loading = ref(false);
+const payments = ref<PaymentResponse[]>([]);
+
+const fetchPayments = async () => {
+  loading.value = true;
+  try {
+    // No list endpoint parameters; assume payments include status/amounts
+    const res = await fetch('http://localhost:3333/api/payments');
+    payments.value = res.ok ? await res.json() : [];
+  } finally {
+    loading.value = false;
+  }
+};
+
+const totalExpected = computed(() =>
+  payments.value.reduce((sum, p) => sum + Number(p.totalAmount ?? 0), 0)
+);
+const totalPaid = computed(() => payments.value.reduce((sum, p) => sum + Number(p.payed ?? 0), 0));
+const totalOpen = computed(() => Math.max(totalExpected.value - totalPaid.value, 0));
+
+onMounted(fetchPayments);
+</script>
+
 <template>
   <section class="admin-layout">
     <aside class="sidebar">
@@ -26,69 +53,24 @@
 
     <div class="admin-content">
       <div class="admin-grid">
-        <div class="card tall">
+        <div class="card">
           <div class="card-header">
-            <h3>Locais em destaque</h3>
-            <button class="pill small" type="button">Ver todos</button>
+            <h3>Faturamento</h3>
+            <span class="muted">Resumo dos pagamentos</span>
           </div>
-          <ul class="list">
-            <li>
-              <div>
-                <strong>Salão Centro Histórico</strong>
-                <p class="muted">Capacidade 150 · Disponível</p>
-              </div>
-              <span class="pill">R$ 280</span>
-            </li>
-            <li>
-              <div>
-                <strong>Chácara Flor do Campo</strong>
-                <p class="muted">Capacidade 200 · Reservas ativas</p>
-              </div>
-              <span class="pill">R$ 320</span>
-            </li>
-            <li>
-              <div>
-                <strong>Auditório Curitiba</strong>
-                <p class="muted">Capacidade 80 · Disponível</p>
-              </div>
-              <span class="pill">R$ 180</span>
-            </li>
-          </ul>
-        </div>
-
-        <div class="card chart">
-          <div class="card-header">
-            <h3>Financeiro</h3>
-            <span class="muted">Entradas dos últimos 30 dias</span>
-          </div>
-          <div class="chart-placeholder">[Gráfico de linhas/colunas]</div>
-        </div>
-
-        <div class="card calendar">
-          <div class="card-header">
-            <h3>Agenda</h3>
-            <span class="muted">Reservas da semana</span>
-          </div>
-          <div class="calendar-placeholder">
-            <div class="day">
-              <strong>Seg</strong>
-              <span>2 reservas</span>
+          <div v-if="loading" class="muted">Carregando...</div>
+          <div v-else class="stats-grid">
+            <div class="stat">
+              <span class="muted">Pago</span>
+              <strong>R$ {{ totalPaid.toFixed(2) }}</strong>
             </div>
-            <div class="day">
-              <strong>Ter</strong>
-              <span>1 reserva</span>
+            <div class="stat">
+              <span class="muted">Esperado</span>
+              <strong>R$ {{ totalExpected.toFixed(2) }}</strong>
             </div>
-            <div class="day">
-              <strong>Qua</strong>
-              <span>3 reservas</span>
-            </div>
-            <div class="day">
-              <strong>Qui</strong>
-              <span>1 reserva</span>
-            </div>
-            <div class="day">
-              <strong>Sex</strong>
-              <span>2 reservas</span>
+            <div class="stat">
+              <span class="muted">Em aberto</span>
+              <strong>R$ {{ totalOpen.toFixed(2) }}</strong>
             </div>
           </div>
         </div>

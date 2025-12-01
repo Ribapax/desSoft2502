@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 
 type AuthDraft = {
+  id?: string;
   email: string;
   password: string;
   remember: boolean;
@@ -10,6 +11,7 @@ type AuthDraft = {
 
 export const useAuthStore = defineStore('auth', {
   state: (): AuthDraft => ({
+    id: undefined,
     email: '',
     password: '',
     remember: false,
@@ -19,6 +21,7 @@ export const useAuthStore = defineStore('auth', {
   }),
   actions: {
     saveDraft(payload: Omit<AuthDraft, 'lastSavedAt'>) {
+      this.id = payload.id;
       this.email = payload.email;
       this.password = payload.password;
       this.remember = payload.remember;
@@ -26,7 +29,8 @@ export const useAuthStore = defineStore('auth', {
       this.roles = payload.roles;
       this.tenantIds = payload.tenantIds;
     },
-    authenticate(payload: { email: string; roles: string[]; tenantIds?: string[] }) {
+    authenticate(payload: { id?: string; email: string; roles: string[]; tenantIds?: string[] }) {
+      this.id = payload.id;
       this.email = payload.email;
       this.roles = payload.roles;
       this.tenantIds = payload.tenantIds ?? [];

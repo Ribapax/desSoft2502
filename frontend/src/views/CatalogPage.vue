@@ -39,13 +39,18 @@ onMounted(fetchCatalog);
     <p class="muted">Escolha um espaço para reservar; detalhes e disponibilidade serão exibidos na próxima etapa.</p>
 
     <div v-if="loading" class="muted">Carregando espaços...</div>
-    <div v-else class="user-grid">
-      <div v-for="space in spaces" :key="space.id" class="card user-card">
-        <div class="cover-placeholder"></div>
-        <h4>{{ space.name }}</h4>
+      <div v-else class="user-grid">
+        <div v-for="space in spaces" :key="space.id" class="card user-card">
+        <img
+          class="cover-placeholder"
+          :src="space.coverImageUrl || 'https://images.unsplash.com/photo-1497366858526-0766cadbe8fa?auto=format&fit=crop&w=900&q=80'"
+          alt="Imagem do espaço"
+          loading="lazy"
+        />
+          <h4>{{ space.name }}</h4>
         <div class="pill-group">
           <span class="pill small">Capacidade: {{ space.capacity }}</span>
-          <span class="pill small">R$ {{ space.pricePerHour.toFixed(2) }}/h</span>
+          <span class="pill small">R$ {{ space.price.toFixed(2) }}</span>
           <span v-if="space.tenantId" class="pill small">
             {{ tenants.find((t) => t.id === space.tenantId)?.name ?? 'Filial' }}
           </span>

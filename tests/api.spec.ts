@@ -3,7 +3,6 @@ import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../src/server';
 import { resetDatabase } from '../src/infra/database/reset';
 import { runSeed } from '../src/scripts/seed';
-import { ReservationStatus } from '../src/domain/enums/ReservationStatus';
 import { PaymentStatus } from '../src/domain/enums/PaymentStatus';
 
 const app = createApp();
@@ -25,15 +24,9 @@ const buildSpacePayload = () => ({
   name: `Espaço ${nextId()}`,
   description: 'Salão amplo com área externa e cozinha equipada.',
   capacity: 120,
-  pricePerHour: 150,
+  price: 150,
   coverImageUrl: 'https://example.com/image.jpg'
 });
-
-const futureInterval = () => {
-  const start = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-  const end = new Date(start.getTime() + 4 * 60 * 60 * 1000);
-  return { start: start.toISOString(), end: end.toISOString() };
-};
 
 describe('Seu Cantinho API', () => {
   beforeEach(async () => {
@@ -62,17 +55,14 @@ describe('Seu Cantinho API', () => {
   it('impede double-booking ao criar reserva', async () => {
     const user = (await request(app).post('/api/users').send(buildUserPayload())).body;
     const space = (await request(app).post('/api/spaces').send(buildSpacePayload())).body;
-    const { start, end } = futureInterval();
+    const reservationDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
     const firstReservation = await request(app)
       .post('/api/reservations')
       .send({
         userId: user.id,
         spaceId: space.id,
-        startDate: start,
-        endDate: end,
-        totalPrice: 600,
-        status: ReservationStatus.Confirmed
+        reservationDate
       });
     expect(firstReservation.status).toBe(201);
     const listAfterFirst = await request(app).get('/api/reservations');
@@ -83,9 +73,7 @@ describe('Seu Cantinho API', () => {
       .send({
         userId: user.id,
         spaceId: space.id,
-        startDate: start,
-        endDate: end,
-        totalPrice: 600
+        reservationDate
       });
     expect(overlapping.status).toBe(409);
   });
@@ -93,24 +81,23 @@ describe('Seu Cantinho API', () => {
   it('registra pagamento para uma reserva existente', async () => {
     const user = (await request(app).post('/api/users').send(buildUserPayload())).body;
     const space = (await request(app).post('/api/spaces').send(buildSpacePayload())).body;
-    const { start, end } = futureInterval();
+    const reservationDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
     const reservationResponse = await request(app)
       .post('/api/reservations')
       .send({
         userId: user.id,
         spaceId: space.id,
-        startDate: start,
-        endDate: end,
-        totalPrice: 800
+        reservationDate
       });
     expect(reservationResponse.status).toBe(201);
 
     const paymentResponse = await request(app)
       .post('/api/payments')
       .send({
-        reservationId: reservationResponse.body.id,
-        amount: 400,
+        reservationIds: [reservationResponse.body.id],
+        totalAmount: 800,
+        payed: 400,
         status: PaymentStatus.Signal,
         paidAt: new Date().toISOString()
       });

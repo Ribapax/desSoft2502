@@ -3,8 +3,11 @@ export type SpaceResponse = {
   name: string;
   description: string;
   capacity: number;
-  pricePerHour: number;
+  price: number;
   coverImageUrl?: string;
+  checkInTime?: string;
+  checkOutTime?: string;
+  signalPercentage?: number;
   tenantId?: string;
   createdAt: string;
 };
@@ -13,8 +16,11 @@ export type SpacePayload = {
   name: string;
   description: string;
   capacity: number;
-  pricePerHour: number;
+  price: number;
   coverImageUrl?: string;
+  checkInTime?: string;
+  checkOutTime?: string;
+  signalPercentage?: number;
   tenantId?: string;
 };
 

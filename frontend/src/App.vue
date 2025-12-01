@@ -21,7 +21,7 @@ const closeDropdown = () => {
 };
 
 const logout = () => {
-  auth.authenticate({ email: '', roles: [] });
+  auth.authenticate({ id: undefined, email: '', roles: [], tenantIds: [] });
   router.push({ name: 'home' });
 };
 </script>
@@ -41,6 +41,14 @@ const logout = () => {
           to="/catalogo"
         >
           Catálogo
+        </RouterLink>
+        <RouterLink
+          v-if="!isStaff"
+          class="btn btn-secondary catalog-btn"
+          :class="{ active: isActive('my-reservations') }"
+          to="/reservas"
+        >
+          Minhas reservas
         </RouterLink>
       </div>
       <nav class="nav-links">

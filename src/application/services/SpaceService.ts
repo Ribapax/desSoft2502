@@ -6,7 +6,7 @@ interface CreateSpaceInput {
   name: string;
   description: string;
   capacity: number;
-  pricePerHour: number;
+  price: number;
   coverImageUrl?: string;
   checkInTime?: string;
   checkOutTime?: string;
@@ -18,7 +18,7 @@ interface UpdateSpaceInput {
   name?: string;
   description?: string;
   capacity?: number;
-  pricePerHour?: number;
+  price?: number;
   coverImageUrl?: string;
   checkInTime?: string;
   checkOutTime?: string;

@@ -3,7 +3,7 @@ export interface Space {
   name: string;
   description: string;
   capacity: number;
-  pricePerHour: number;
+  price: number;
   coverImageUrl?: string;
   checkInTime: string;
   checkOutTime: string;

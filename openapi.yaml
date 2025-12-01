@@ -5,7 +5,7 @@ info:
   description: |
     Camada de apresentação REST do sistema "Seu Cantinho". A API cobre os recursos
     de usuários, espaços, reservas e pagamentos, adotando validações contra
-    double-booking e documentação em português.
+    double-booking via índice único por espaço/data e documentação em português.
 servers:
   - url: http://localhost:3333
     description: Ambiente local de desenvolvimento
@@ -283,10 +283,6 @@ paths:
           name: spaceId
           schema:
             type: string
-        - in: query
-          name: status
-          schema:
-            $ref: '#/components/schemas/ReservationStatus'
       responses:
         '200':
           description: Lista de reservas
@@ -297,7 +293,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/Reservation'
     post:
-      summary: Cadastra reserva garantindo ausência de double-booking
+      summary: Cadastra reserva garantindo ausência de double-booking diário
       tags: [Reservas]
       requestBody:
         required: true
@@ -334,7 +330,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
     put:
-      summary: Atualiza reserva com validação de conflitos
+      summary: Atualiza reserva com validação de conflitos diários
       tags: [Reservas]
       parameters:
         - $ref: '#/components/parameters/ResourceId'
@@ -361,13 +357,8 @@ paths:
           description: Reserva removida
   /api/payments:
     get:
-      summary: Lista pagamentos (filtrável por reserva)
+      summary: Lista pagamentos
       tags: [Pagamentos]
-      parameters:
-        - in: query
-          name: reservationId
-          schema:
-            type: string
       responses:
         '200':
           description: Lista de pagamentos
@@ -598,13 +589,9 @@ components:
           type: string
         capacity:
           type: integer
-        pricePerHour:
+        price:
           type: number
         coverImageUrl:
-          type: string
-        checkInTime:
-          type: string
-        checkOutTime:
           type: string
         signalPercentage:
           type: number
@@ -615,7 +602,7 @@ components:
           format: date-time
     CreateSpacePayload:
       type: object
-      required: [name, description, capacity, pricePerHour]
+      required: [name, description, capacity, price]
       properties:
         name:
           type: string
@@ -623,13 +610,9 @@ components:
           type: string
         capacity:
           type: integer
-        pricePerHour:
+        price:
           type: number
         coverImageUrl:
-          type: string
-        checkInTime:
-          type: string
-        checkOutTime:
           type: string
         signalPercentage:
           type: number
@@ -644,21 +627,14 @@ components:
           type: string
         capacity:
           type: integer
-        pricePerHour:
+        price:
           type: number
         coverImageUrl:
-          type: string
-        checkInTime:
-          type: string
-        checkOutTime:
           type: string
         signalPercentage:
           type: number
         tenantId:
           type: string
-    ReservationStatus:
-      type: string
-      enum: [PENDING, CONFIRMED, CANCELLED]
     Reservation:
       type: object
       properties:
@@ -668,20 +644,11 @@ components:
           type: string
         spaceId:
           type: string
-        startDate:
+        reservationDate:
           type: string
-          format: date-time
-        endDate:
+          format: date
+        paymentId:
           type: string
-          format: date-time
-        checkInTime:
-          type: string
-        checkOutTime:
-          type: string
-        totalPrice:
-          type: number
-        status:
-          $ref: '#/components/schemas/ReservationStatus'
         createdAt:
           type: string
           format: date-time
@@ -690,26 +657,17 @@ components:
           format: date-time
     CreateReservationPayload:
       type: object
-      required: [userId, spaceId, startDate, endDate, totalPrice]
+      required: [userId, spaceId, reservationDate]
       properties:
         userId:
           type: string
         spaceId:
           type: string
-        startDate:
+        reservationDate:
           type: string
-          format: date-time
-        endDate:
+          format: date
+        paymentId:
           type: string
-          format: date-time
-        checkInTime:
-          type: string
-        checkOutTime:
-          type: string
-        totalPrice:
-          type: number
-        status:
-          $ref: '#/components/schemas/ReservationStatus'
     UpdateReservationPayload:
       type: object
       properties:
@@ -717,20 +675,11 @@ components:
           type: string
         spaceId:
           type: string
-        startDate:
+        reservationDate:
           type: string
-          format: date-time
-        endDate:
+          format: date
+        paymentId:
           type: string
-          format: date-time
-        checkInTime:
-          type: string
-        checkOutTime:
-          type: string
-        totalPrice:
-          type: number
-        status:
-          $ref: '#/components/schemas/ReservationStatus'
     PaymentStatus:
       type: string
       enum: [SIGNAL, FULL]
@@ -739,9 +688,9 @@ components:
       properties:
         id:
           type: string
-        reservationId:
-          type: string
-        amount:
+        totalAmount:
+          type: number
+        payed:
           type: number
         status:
           $ref: '#/components/schemas/PaymentStatus'
@@ -753,11 +702,15 @@ components:
           format: date-time
     CreatePaymentPayload:
       type: object
-      required: [reservationId, amount, status, paidAt]
+      required: [totalAmount, payed, status, paidAt]
       properties:
-        reservationId:
-          type: string
-        amount:
+        reservationIds:
+          type: array
+          items:
+            type: string
+        totalAmount:
+          type: number
+        payed:
           type: number
         status:
           $ref: '#/components/schemas/PaymentStatus'
@@ -767,7 +720,9 @@ components:
     UpdatePaymentPayload:
       type: object
       properties:
-        amount:
+        totalAmount:
+          type: number
+        payed:
           type: number
         status:
           $ref: '#/components/schemas/PaymentStatus'

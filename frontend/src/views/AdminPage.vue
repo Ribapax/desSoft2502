@@ -37,21 +37,21 @@
                 <strong>Salão Centro Histórico</strong>
                 <p class="muted">Capacidade 150 · Disponível</p>
               </div>
-              <span class="pill">R$ 280/h</span>
+              <span class="pill">R$ 280</span>
             </li>
             <li>
               <div>
                 <strong>Chácara Flor do Campo</strong>
                 <p class="muted">Capacidade 200 · Reservas ativas</p>
               </div>
-              <span class="pill">R$ 320/h</span>
+              <span class="pill">R$ 320</span>
             </li>
             <li>
               <div>
                 <strong>Auditório Curitiba</strong>
                 <p class="muted">Capacidade 80 · Disponível</p>
               </div>
-              <span class="pill">R$ 180/h</span>
+              <span class="pill">R$ 180</span>
             </li>
           </ul>
         </div>

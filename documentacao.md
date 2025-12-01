@@ -122,9 +122,8 @@ interface User {
 **Clientes podem fazer reservas?** Sim, com o seguinte fluxo:
 
 1. **Cliente acessa o catálogo** → Visualiza espaços disponíveis com fotos, capacidade e preço
-2. **Cliente solicita reserva** → Reserva é criada com status `PENDING`
-3. **Funcionário/Admin confirma** → Após verificação, status muda para `CONFIRMED`
-4. **Pagamento é registrado** → Sinal (`SIGNAL`) ou quitação (`FULL`)
+2. **Cliente solicita reserva** → Reserva diária criada e vinculável a um pagamento
+3. **Pagamento é registrado** → Sinal ou quitação (`PaymentStatus`: `SIGNAL`, `FULL`) consolidando o total em um único pagamento que pode se relacionar a várias reservas
 
 Este fluxo garante que:
 
@@ -138,52 +137,32 @@ Este fluxo garante que:
 
 ### 5.1 O Problema
 
-Double-booking ocorre quando o mesmo espaço é reservado por diferentes clientes para o mesmo período, causando conflitos e insatisfação.
+Double-booking ocorre quando o mesmo espaço é reservado por diferentes clientes para o mesmo dia, causando conflitos e insatisfação.
 
 ### 5.2 A Solução Implementada
 
-A prevenção é garantida na **Camada de Aplicação** (`ReservationService`) através de validação síncrona antes de cada criação/atualização de reserva:
+A prevenção é garantida **no banco de dados** via índice único (`space_id`, `reservation_date`) e reforço na aplicação para responder 409 antes da violação:
+
+```sql
+CREATE UNIQUE INDEX reservations_space_date_unique ON reservations (space_id, reservation_date);
+```
 
 ```typescript
-// src/application/services/ReservationService.ts
-
-public async create(input: CreateReservationInput): Promise<Reservation> {
-  // 1. Valida intervalo de datas
-  this.ensureDateRange(input.startDate, input.endDate);
-  
-  // 2. Verifica se usuário existe
-  await this.ensureUserExists(input.userId);
-  
-  // 3. Verifica se espaço existe
-  await this.ensureSpaceExists(input.spaceId);
-  
-  // 4. VERIFICAÇÃO CRÍTICA: Checa conflitos de horário
-  await this.ensureAvailability(input.spaceId, input.startDate, input.endDate);
-  
-  // 5. Só então cria a reserva
-  return await this.repository.create({ ...input, status });
-}
-
-private async ensureAvailability(spaceId, start, end, excludeId?) {
-  const conflicts = await this.repository.countOverlaps(spaceId, start, end, excludeId);
-  if (conflicts > 0) {
-    throw new AppError('Espaço já reservado nesse período.', 409); // HTTP 409 Conflict
+// src/application/services/ReservationService.ts (trecho)
+private async ensureAvailability(spaceId: string, reservationDate: string, excludeId?: string) {
+  const existing = await this.repository.findBySpaceAndDate(spaceId, reservationDate);
+  if (existing && existing.id !== excludeId) {
+    throw new AppError('Espaço já reservado nesse dia.', 409);
   }
 }
 ```
 
-### 5.3 Consulta SQL de Detecção de Conflitos
+### 5.3 Garantia de Consistência
 
-O repositório executa a seguinte consulta para detectar sobreposições:
-
-```sql
-SELECT COUNT(*) as count FROM reservations
-WHERE space_id = $1                           -- Mesmo espaço
-  AND status != 'CANCELLED'                   -- Ignora reservas canceladas
-  AND NOT (end_date <= $2 OR start_date >= $3) -- Detecta sobreposição temporal
-```
-
-**Lógica de sobreposição**: Duas reservas NÃO conflitam apenas se uma termina antes da outra começar. Qualquer outra situação configura conflito.
+1. **Regra de unicidade**: o índice bloqueia gravações simultâneas e evita race conditions
+2. **Erro semântico**: API responde 409 com mensagem “Espaço já reservado nesse dia.”
+3. **Granularidade diária**: não há cálculo de intervalos; basta a data.
+4. **Horários no espaço**: check-in/check-out permanecem definidos no cadastro do espaço; a reserva guarda apenas a data e o preço.
 
 ### 5.4 Diagrama de Sequência - Prevenção de Double-Booking
 
@@ -192,14 +171,12 @@ WHERE space_id = $1                           -- Mesmo espaço
 O diagrama ilustra dois cenários:
 
 1. **Cenário 1 (sucesso)**: Cliente A cria reserva, sistema verifica disponibilidade, encontra 0 conflitos e persiste a reserva
-2. **Cenário 2 (bloqueio)**: Cliente B tenta reservar mesmo espaço/horário, sistema detecta 1 conflito e retorna HTTP 409
+2. **Cenário 2 (bloqueio)**: Cliente B tenta reservar o mesmo espaço no mesmo dia, o índice e a aplicação retornam HTTP 409
 
 ### 5.5 Garantias Adicionais
 
-1. **Validação em Updates**: Ao editar uma reserva, o sistema exclui a própria reserva da verificação (`excludeId`) para permitir ajustes de horário
-2. **Status Considerados**: Apenas reservas `PENDING` e `CONFIRMED` bloqueiam novas reservas; `CANCELLED` são ignoradas
-3. **Atomicidade**: A verificação e criação ocorrem na mesma requisição, minimizando race conditions
-4. **Resposta Clara**: Retorna HTTP 409 com mensagem "Espaço já reservado nesse período" para feedback imediato
+1. **Atomicidade**: A verificação e criação ocorrem na mesma requisição, minimizando race conditions
+2. **Resposta Clara**: Retorna HTTP 409 com mensagem "Espaço já reservado nesse dia" para feedback imediato
 
 ---
 
@@ -242,7 +219,7 @@ HTTP Response
 
 ![Diagrama de Classes](uml/png/diagrama-classes.png)
 
-Entidades principais: **User**, **Space**, **Reservation** e **Payment**, alinhadas diretamente com as interfaces utilizadas na API. As reservas referenciam `userId` e `spaceId`, os pagamentos se ligam a uma reserva via `reservationId`, e os estados possíveis são representados por `ReservationStatus` (`PENDING`, `CONFIRMED`, `CANCELLED`) e `PaymentStatus` (`SIGNAL`, `FULL`).
+Entidades principais: **User**, **Space**, **Reservation** e **Payment**, alinhadas diretamente com as interfaces utilizadas na API. As reservas referenciam `userId`, `spaceId` (e opcionalmente `paymentId`), e os pagamentos trazem `totalAmount`, `payed` e `status` (`PaymentStatus`: `SIGNAL`, `FULL`), podendo se relacionar a múltiplas reservas.
 
 **Entidades de suporte**: **Tenant** (filiais) e **Role** (papéis) permitem multi-tenancy e controle de acesso.
 

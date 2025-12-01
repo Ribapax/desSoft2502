@@ -29,7 +29,7 @@ classDiagram
         +name: string
         +description: string
         +capacity: number
-        +pricePerHour: number
+        +price: number
         +coverImageUrl?: string
         +checkInTime: string
         +checkOutTime: string
@@ -42,30 +42,19 @@ classDiagram
         +id: string
         +userId: string
         +spaceId: string
-        +startDate: string
-        +endDate: string
-        +checkInTime: string
-        +checkOutTime: string
-        +totalPrice: number
-        +status: ReservationStatus
+        +reservationDate: string
+        +paymentId?: string
         +createdAt: string
         +updatedAt: string
     }
 
     class Payment {
         +id: string
-        +reservationId: string
-        +amount: number
+        +totalAmount: number
+        +payed: number
         +status: PaymentStatus
         +paidAt: string
         +createdAt: string
-    }
-
-    class ReservationStatus {
-        <<enumeration>>
-        PENDING
-        CONFIRMED
-        CANCELLED
     }
 
     class PaymentStatus {
@@ -76,8 +65,7 @@ classDiagram
 
     Reservation --> User : userId
     Reservation --> Space : spaceId
-    Payment --> Reservation : reservationId
-    Reservation --> ReservationStatus
+    Reservation --> Payment : paymentId
     Payment --> PaymentStatus
     User --> Role : roles
     Tenant --> Role : roles

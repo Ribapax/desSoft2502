@@ -1,4 +1,4 @@
-type AuthResult = { email: string; roles: string[] };
+type AuthResult = { id: string; email: string; roles: string[]; tenantIds: string[] };
 
 export const authService = {
   async login(email: string, password: string): Promise<AuthResult> {
@@ -12,8 +12,11 @@ export const authService = {
       throw new Error('Credenciais inválidas');
     }
 
-    const data = (await res.json()) as { user: { email: string; roles: { name: string }[]; tenantIds?: string[] } };
+    const data = (await res.json()) as {
+      user: { id: string; email: string; roles: { name: string }[]; tenantIds?: string[] };
+    };
     return {
+      id: data.user.id,
       email: data.user.email,
       roles: data.user.roles.map((r) => r.name),
       tenantIds: data.user.tenantIds ?? []

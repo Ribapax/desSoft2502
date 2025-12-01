@@ -4,14 +4,16 @@ import { Payment } from '../../domain/entities/Payment';
 import { PaymentStatus } from '../../domain/enums/PaymentStatus';
 
 interface CreatePaymentDTO {
-  reservationId: string;
-  amount: number;
+  totalAmount: number;
+  payed: number;
   status: PaymentStatus;
   paidAt: string;
+  reservationIds?: string[];
 }
 
 interface UpdatePaymentDTO {
-  amount?: number;
+  totalAmount?: number;
+  payed?: number;
   status?: PaymentStatus;
   paidAt?: string;
 }
@@ -20,8 +22,8 @@ export class PaymentRepository {
   private mapRow(row: any): Payment {
     return {
       id: row.id,
-      reservationId: row.reservation_id,
-      amount: Number(row.amount),
+      totalAmount: Number(row.total_amount),
+      payed: Number(row.payed),
       status: row.status as PaymentStatus,
       paidAt: row.paid_at,
       createdAt: row.created_at
@@ -39,21 +41,19 @@ export class PaymentRepository {
     return row ? this.mapRow(row) : null;
   }
 
-  public async findByReservation(reservationId: string): Promise<Payment[]> {
-    const result = await dbConnection.query(
-      'SELECT * FROM payments WHERE reservation_id = $1 ORDER BY paid_at DESC',
-      [reservationId]
-    );
-    return result.rows.map((row) => this.mapRow(row));
-  }
-
   public async create(data: CreatePaymentDTO): Promise<Payment> {
     const id = randomUUID();
     const createdAt = new Date().toISOString();
     await dbConnection.query(
-      'INSERT INTO payments (id, reservation_id, amount, status, paid_at, created_at) VALUES ($1, $2, $3, $4, $5, $6)',
-      [id, data.reservationId, data.amount, data.status, data.paidAt, createdAt]
+      'INSERT INTO payments (id, total_amount, payed, status, paid_at, created_at) VALUES ($1, $2, $3, $4, $5, $6)',
+      [id, data.totalAmount, data.payed, data.status, data.paidAt, createdAt]
     );
+    if (data.reservationIds?.length) {
+      await dbConnection.query('UPDATE reservations SET payment_id = $1 WHERE id = ANY($2::uuid[])', [
+        id,
+        data.reservationIds
+      ]);
+    }
     const created = await this.findById(id);
     if (!created) {
       throw new Error('Falha ao criar pagamento.');
@@ -65,9 +65,13 @@ export class PaymentRepository {
     const fields: string[] = [];
     const values: any[] = [];
 
-    if (data.amount !== undefined) {
-      fields.push('amount = ?');
-      values.push(data.amount);
+    if (data.totalAmount !== undefined) {
+      fields.push('total_amount = ?');
+      values.push(data.totalAmount);
+    }
+    if (data.payed !== undefined) {
+      fields.push('payed = ?');
+      values.push(data.payed);
     }
     if (data.status !== undefined) {
       fields.push('status = ?');

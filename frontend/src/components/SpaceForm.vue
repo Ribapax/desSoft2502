@@ -9,8 +9,11 @@ const props = defineProps<{
     name: string;
     description: string;
     capacity: number;
-    pricePerHour: number;
+    price: number;
     coverImageUrl?: string;
+    checkInTime?: string;
+    checkOutTime?: string;
+    signalPercentage?: number;
     tenantId?: string;
   };
   tenants?: TenantResponse[];
@@ -22,7 +25,7 @@ const form = reactive<SpacePayload>({
   name: props.space?.name ?? '',
   description: props.space?.description ?? '',
   capacity: props.space?.capacity ?? 0,
-  pricePerHour: props.space?.pricePerHour ?? 0,
+  price: props.space?.price ?? 0,
   coverImageUrl: undefined,
   checkInTime: props.space?.checkInTime ?? '08:00',
   checkOutTime: props.space?.checkOutTime ?? '18:00',
@@ -36,7 +39,7 @@ watch(
     form.name = space?.name ?? '';
     form.description = space?.description ?? '';
     form.capacity = space?.capacity ?? 0;
-    form.pricePerHour = space?.pricePerHour ?? 0;
+    form.price = space?.price ?? 0;
     form.coverImageUrl = space?.coverImageUrl ?? undefined;
     form.checkInTime = space?.checkInTime ?? '08:00';
     form.checkOutTime = space?.checkOutTime ?? '18:00';
@@ -46,7 +49,7 @@ watch(
 );
 
 const canSubmit = computed(
-  () => form.name && form.description && form.capacity > 0 && form.pricePerHour >= 0
+  () => form.name && form.description && form.capacity > 0 && form.price >= 0
 );
 
 const onSubmit = () => emit('submit', { ...form });
@@ -67,8 +70,8 @@ const onSubmit = () => emit('submit', { ...form });
       <input v-model.number="form.capacity" class="input" type="number" min="1" required />
     </label>
     <label class="form-group">
-      <span>Preço por hora</span>
-      <input v-model.number="form.pricePerHour" class="input" type="number" min="0" step="0.01" required />
+      <span>Preço</span>
+      <input v-model.number="form.price" class="input" type="number" min="0" step="0.01" required />
     </label>
     <label class="form-group">
       <span>Filial</span>

@@ -7,8 +7,7 @@ export class PaymentController {
 
   public list = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const reservationId = req.query.reservationId as string | undefined;
-      const payments = await this.service.list(reservationId);
+      const payments = await this.service.list();
       res.json(payments);
     } catch (error) {
       next(error);

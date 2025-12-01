@@ -4,7 +4,7 @@ export const createSpaceSchema = z.object({
   name: z.string().min(3),
   description: z.string().min(10),
   capacity: z.number().int().positive(),
-  pricePerHour: z.number().nonnegative(),
+  price: z.number().nonnegative(),
   coverImageUrl: z.string().url().optional(),
   checkInTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
   checkOutTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),

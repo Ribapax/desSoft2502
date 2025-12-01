@@ -49,7 +49,7 @@ const closeModals = () => {
 };
 
 const handleCreate = async (payload: SpacePayload) => {
-  if (!payload.name || !payload.description || !payload.capacity || payload.pricePerHour === undefined) {
+  if (!payload.name || !payload.description || !payload.capacity || payload.price === undefined) {
     Swal.fire({
       toast: true,
       position: 'top-end',
@@ -89,7 +89,7 @@ const handleCreate = async (payload: SpacePayload) => {
 
 const handleUpdate = async (payload: SpacePayload) => {
   if (!selectedSpace.value) return;
-  if (!payload.name || !payload.description || !payload.capacity || payload.pricePerHour === undefined) {
+  if (!payload.name || !payload.description || !payload.capacity || payload.price === undefined) {
     Swal.fire({
       toast: true,
       position: 'top-end',
@@ -170,7 +170,7 @@ onMounted(fetchData);
           <p class="muted">{{ space.description }}</p>
           <div class="pill-group">
             <span class="pill small">Capacidade: {{ space.capacity }}</span>
-            <span class="pill small">R$ {{ space.pricePerHour.toFixed(2) }}/h</span>
+            <span class="pill small">R$ {{ space.price.toFixed(2) }}</span>
             <span v-if="space.tenantId" class="pill small">
               {{ tenants.find((t) => t.id === space.tenantId)?.name ?? 'Filial' }}
             </span>
@@ -217,7 +217,7 @@ onMounted(fetchData);
         <p><strong>Nome:</strong> {{ selectedSpace.name }}</p>
         <p><strong>Descrição:</strong> {{ selectedSpace.description }}</p>
         <p><strong>Capacidade:</strong> {{ selectedSpace.capacity }}</p>
-        <p><strong>Preço/hora:</strong> R$ {{ selectedSpace.pricePerHour.toFixed(2) }}</p>
+        <p><strong>Preço:</strong> R$ {{ selectedSpace.price.toFixed(2) }}</p>
         <p><strong>Filial:</strong> {{ tenants.find((t) => t.id === selectedSpace.tenantId)?.name ?? '—' }}</p>
         <p class="muted">Criado em: {{ new Date(selectedSpace.createdAt).toLocaleString() }}</p>
       </div>

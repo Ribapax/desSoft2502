@@ -18,11 +18,18 @@ const form = reactive({
 const submit = async () => {
   try {
     const result = await authService.login(form.email, form.password);
-    authStore.authenticate({ email: result.email, roles: result.roles, tenantIds: (result as any).tenantIds ?? [] });
+    authStore.authenticate({
+      id: (result as any).id,
+      email: result.email,
+      roles: result.roles,
+      tenantIds: (result as any).tenantIds ?? []
+    });
     statusMessage.value = '';
-    const nonClient = result.roles.some((role) => role !== 'CLIENTE');
+    const normalizedRoles = result.roles.map((role) => role.toLowerCase());
+    const adminRoles = ['admin', 'master', 'financial', 'backoffice'];
+    const isAdmin = normalizedRoles.some((role) => adminRoles.includes(role));
     setTimeout(() => {
-      router.push(nonClient ? { name: 'admin' } : { name: 'home' });
+      router.push(isAdmin ? { name: 'admin' } : { name: 'catalog' });
     }, 400);
   } catch (err) {
     statusMessage.value = '';

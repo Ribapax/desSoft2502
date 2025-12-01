@@ -150,23 +150,26 @@ A prevenção é garantida na **Camada de Aplicação** (`ReservationService`) a
 
 public async create(input: CreateReservationInput): Promise<Reservation> {
   // 1. Verifica se espaço existe (necessário para obter horários de check-in/check-out)
-  await this.ensureSpaceExists(input.spaceId);
+  const space = await this.ensureSpaceExists(input.spaceId);
+  const checkInTime = space.checkInTime ?? '08:00';
+  const checkOutTime = space.checkOutTime ?? '18:00';
   
   // 2. Valida intervalo de datas
-  this.ensureDateRange(input.startDate, input.endDate);
+  this.ensureDateRange(input.startDate, input.endDate, checkInTime, checkOutTime);
   
   // 3. Verifica se usuário existe
   await this.ensureUserExists(input.userId);
   
   // 4. VERIFICAÇÃO CRÍTICA: Checa conflitos de horário
-  await this.ensureAvailability(input.spaceId, input.startDate, input.endDate);
+  await this.ensureAvailability(input.spaceId, input.startDate, input.endDate, checkInTime, checkOutTime);
   
   // 5. Só então cria a reserva
-  return await this.repository.create({ ...input, status });
+  const status = input.status ?? ReservationStatus.Pending;
+  return await this.repository.create({ ...input, checkInTime, checkOutTime, status });
 }
 
-private async ensureAvailability(spaceId, start, end, excludeId?) {
-  const conflicts = await this.repository.countOverlaps(spaceId, start, end, excludeId);
+private async ensureAvailability(spaceId, start, end, checkIn, checkOut, excludeId?) {
+  const conflicts = await this.repository.countOverlaps(spaceId, start, end, checkIn, checkOut, excludeId);
   if (conflicts > 0) {
     throw new AppError('Espaço já reservado nesse período.', 409); // HTTP 409 Conflict
   }

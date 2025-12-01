@@ -11,14 +11,13 @@ sequenceDiagram
     Note over C1,DB: Cenário 1: Reserva bem-sucedida
 
     C1->>API: POST /api/reservations
-    API->>RS: create(spaceId, startDate, endDate)
-    RS->>RS: ensureDateRange()
+    API->>RS: create(userId, spaceId, reservationDate)
     RS->>RS: ensureUserExists()
     RS->>RS: ensureSpaceExists()
-    RS->>REPO: countOverlaps(spaceId, start, end)
-    REPO->>DB: SELECT COUNT(*) WHERE space_id = ? AND NOT (end <= start OR start >= end)
-    DB-->>REPO: count: 0
-    REPO-->>RS: 0 conflitos
+    RS->>REPO: findBySpaceAndDate(spaceId, reservationDate)
+    REPO->>DB: SELECT * FROM reservations WHERE space_id = ? AND reservation_date = ?
+    DB-->>REPO: null (nenhuma reserva)
+    REPO-->>RS: null
     RS->>REPO: create(reservation)
     REPO->>DB: INSERT INTO reservations
     DB-->>REPO: OK
@@ -28,14 +27,13 @@ sequenceDiagram
 
     Note over C1,DB: Cenário 2: Double-booking bloqueado
 
-    C2->>API: POST /api/reservations (mesmo espaço/horário)
-    API->>RS: create(spaceId, startDate, endDate)
-    RS->>RS: ensureDateRange()
+    C2->>API: POST /api/reservations (mesmo espaço/data)
+    API->>RS: create(userId, spaceId, reservationDate)
     RS->>RS: ensureUserExists()
     RS->>RS: ensureSpaceExists()
-    RS->>REPO: countOverlaps(spaceId, start, end)
-    REPO->>DB: SELECT COUNT(*) WHERE space_id = ? AND NOT (end <= start OR start >= end)
-    DB-->>REPO: count: 1
-    REPO-->>RS: 1 conflito!
-    RS--xAPI: AppError(409, "Espaço já reservado nesse período")
+    RS->>REPO: findBySpaceAndDate(spaceId, reservationDate)
+    REPO->>DB: SELECT * FROM reservations WHERE space_id = ? AND reservation_date = ?
+    DB-->>REPO: Reservation existente
+    REPO-->>RS: Reservation (conflito!)
+    RS--xAPI: AppError(409, "Espaço já reservado nesse dia.")
     API--xC2: 409 Conflict

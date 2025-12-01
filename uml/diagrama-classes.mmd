@@ -68,4 +68,6 @@ classDiagram
     Reservation --> Payment : paymentId
     Payment --> PaymentStatus
     User --> Role : roles
+    User --> Tenant : tenantIds
+    Space --> Tenant : tenantId
     Tenant --> Role : roles
